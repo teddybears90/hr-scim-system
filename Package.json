@@ -1,0 +1,14 @@
+{
+  "name": "hr-scim-system",
+  "version": "1.0.0",
+  "description": "SCIM API + frontend för HR-system",
+  "main": "index.js",
+  "scripts": {
+    "start": "vercel dev"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.4"
+  },
+  "type": "module",
+  "license": "MIT"
+}
