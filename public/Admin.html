@@ -71,14 +71,18 @@
     );
 
     async function checkSession() {
-      const { data: { session } } = await supabaseClient.auth.getSession();
-      if (!session) {
+      const { data, error } = await supabaseClient.auth.getSession();
+      const session = data.session;
+
+      if (error || !session) {
+        console.warn('Ingen session hittades:', error?.message);
         window.location.href = '/login.html';
-      } else {
-        document.getElementById('user-email').textContent = `Inloggad som: ${session.user.email}`;
-        localStorage.setItem('sb_token', session.access_token);
-        loadUsers();
+        return;
       }
+
+      document.getElementById('user-email').textContent = `Inloggad som: ${session.user.email}`;
+      localStorage.setItem('sb_token', session.access_token);
+      loadUsers();
     }
 
     async function logout() {
