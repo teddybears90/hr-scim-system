@@ -1,6 +1,7 @@
 {
   "name": "hr-scim-system",
   "version": "1.0.0",
+  "type": "module"
   "description": "SCIM API + frontend för HR-system",
   "main": "index.js",
   "scripts": {
