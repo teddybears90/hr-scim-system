@@ -3,18 +3,21 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>HR Admin Panel</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <style>
     body { font-family: Arial; padding: 2rem; }
     table { border-collapse: collapse; width: 100%; margin-top: 2rem; }
     th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
     th { background-color: #f4f4f4; }
     input, select, button { padding: 0.5rem; margin: 0.2rem; }
+    #user-info { margin-bottom: 1rem; }
   </style>
 </head>
 <body>
-  <h1>HR Admin Panel</h1><label>Bearer Token: <input type="password" id="token" style="width: 300px;" /></label> <button onclick="loadUsers()">Load Users</button>
-
-  <form id="userForm" style="margin-top:2rem">
+  <div id="user-info">
+    <span id="user-email"></span>
+    <button onclick="logout()">Logga ut</button>
+  </div>  <h1>HR Admin Panel</h1>  <form id="userForm" style="margin-top:2rem">
     <h3>Add User</h3>
     <input type="text" placeholder="First Name" id="first" required />
     <input type="text" placeholder="Last Name" id="last" required />
@@ -54,8 +57,30 @@
     </thead>
     <tbody></tbody>
   </table>  <script>
+    const supabase = supabase.createClient(
+      'https://pwxslkkxevuknredmfpb.supabase.co',
+      '<YOUR_ANON_KEY>' // Ersätt detta med din riktiga anon-nyckel
+    );
+
+    async function checkSession() {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        window.location.href = '/login.html';
+      } else {
+        document.getElementById('user-email').textContent = `Inloggad som: ${session.user.email}`;
+        localStorage.setItem('sb_token', session.access_token);
+        loadUsers();
+      }
+    }
+
+    function logout() {
+      supabase.auth.signOut();
+      localStorage.removeItem('sb_token');
+      window.location.href = '/login.html';
+    }
+
     async function loadUsers() {
-      const token = document.getElementById('token').value;
+      const token = localStorage.getItem('sb_token');
       const res = await fetch('/api/users', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -80,10 +105,10 @@
 
     document.getElementById('userForm').addEventListener('submit', async (e) => {
       e.preventDefault();
-      const token = document.getElementById('token').value;
+      const token = localStorage.getItem('sb_token');
 
       const user = {
-        userName: (Date.now() + '-' + Math.random().toString(36).substr(2, 5)), // Genererad username
+        userName: (Date.now() + '-' + Math.random().toString(36).substr(2, 5)),
         name: {
           givenName: document.getElementById('first').value,
           familyName: document.getElementById('last').value
@@ -115,5 +140,7 @@
         alert('Error: ' + error.error);
       }
     });
+
+    checkSession();
   </script></body>
 </html>
