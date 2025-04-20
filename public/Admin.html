@@ -8,7 +8,7 @@
     table { border-collapse: collapse; width: 100%; margin-top: 2rem; }
     th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
     th { background-color: #f4f4f4; }
-    input, button { padding: 0.5rem; margin: 0.2rem; }
+    input, select, button { padding: 0.5rem; margin: 0.2rem; }
   </style>
 </head>
 <body>
@@ -18,14 +18,29 @@
     <h3>Add User</h3>
     <input type="text" placeholder="First Name" id="first" required />
     <input type="text" placeholder="Last Name" id="last" required />
-    <input type="text" placeholder="Username" id="username" required />
-    <input type="email" placeholder="Email" id="email" required />
-    <input type="text" placeholder="Department" id="department" />
-    <input type="text" placeholder="Title" id="title" />
-    <input type="text" placeholder="Employee #" id="empNum" />
-    <input type="date" placeholder="Start Date" id="start" />
-    <input type="date" placeholder="End Date" id="end" />
-    <button type="submit">Add User</button>
+    <input type="email" placeholder="Email" id="email" required /><select id="department">
+  <option value="">Select Department</option>
+  <option value="HR">HR</option>
+  <option value="IT">IT</option>
+  <option value="Finance">Finance</option>
+  <option value="Sales">Sales</option>
+  <option value="Marketing">Marketing</option>
+</select>
+
+<select id="title">
+  <option value="">Select Title</option>
+  <option value="Manager">Manager</option>
+  <option value="Developer">Developer</option>
+  <option value="Analyst">Analyst</option>
+  <option value="Coordinator">Coordinator</option>
+  <option value="Engineer">Engineer</option>
+</select>
+
+<input type="text" placeholder="Employee #" id="empNum" />
+<input type="date" placeholder="Start Date" id="start" />
+<input type="date" placeholder="End Date" id="end" />
+<button type="submit">Add User</button>
+
   </form>  <table id="userTable">
     <thead>
       <tr>
@@ -68,7 +83,7 @@
       const token = document.getElementById('token').value;
 
       const user = {
-        userName: document.getElementById('username').value,
+        userName: (Date.now() + '-' + Math.random().toString(36).substr(2, 5)), // Genererad username
         name: {
           givenName: document.getElementById('first').value,
           familyName: document.getElementById('last').value
