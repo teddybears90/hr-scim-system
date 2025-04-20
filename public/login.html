@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Login</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <style>
@@ -13,24 +13,32 @@
 </head>
 <body>
   <h1>Login</h1>
+
   <form id="login-form">
     <input type="email" id="email" placeholder="Email" required />
     <input type="password" id="password" placeholder="Password" required />
     <button type="submit">Login</button>
   </form>
 
-  <script>
-    const SUPABASE_URL = "https://pwxslkkxevuknredmfpb.supabase.co";
-    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB3eHNsa2t4ZXZ1a25yZWRtZnBiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMDA1MDcsImV4cCI6MjA2MDU3NjUwN30.vWwGu6q8mJy5vX1g584qSL73V9F3bhh2RSW-2dNeEc0"; // klistra in här
+  <script type="module">
+    const { createClient } = supabase;
+    const supabaseClient = createClient(
+      'https://pwxslkkxevuknredmfpb.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB3eHNsa2t4ZXZ1a25yZWRtZnBiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMDA1MDcsImV4cCI6MjA2MDU3NjUwN30.vWwGu6q8mJy5vX1g584qSL73V9F3bhh2RSW-2dNeEc0'
+    );
 
-    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    // Redirect om redan inloggad
+    const { data } = await supabaseClient.auth.getSession();
+    if (data.session) {
+      window.location.href = '/Admin.html';
+    }
 
     document.getElementById('login-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       const email = document.getElementById('email').value;
       const password = document.getElementById('password').value;
 
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
 
       if (error) {
         alert('Login failed: ' + error.message);
