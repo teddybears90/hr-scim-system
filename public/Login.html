@@ -1,0 +1,40 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <style>
+    body { font-family: sans-serif; padding: 2rem; }
+    form { display: flex; flex-direction: column; max-width: 300px; }
+    input, button { margin: 0.5rem 0; padding: 0.5rem; }
+  </style>
+</head>
+<body>
+  <h1>Login</h1>
+  <form id="login-form">
+    <input type="email" id="email" placeholder="Email" required />
+    <input type="password" id="password" placeholder="Password" required />
+    <button type="submit">Login</button>
+  </form>  <script>
+    const SUPABASE_URL = "${SUPABASE_URL}";
+    const SUPABASE_KEY = "${SUPABASE_ANON_KEY}";
+
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+
+      if (error) {
+        alert('Login failed: ' + error.message);
+      } else {
+        localStorage.setItem('sb_token', data.session.access_token);
+        window.location.href = '/Admin.html';
+      }
+    });
+  </script></body>
+</html>
