@@ -11,41 +11,32 @@ module.exports = async function handler(req, res) {
   const { method } = req;
 
   try {
-    // Hämta användaren från Supabase-session-token
     const { data: { user }, error: userError } = await supabase.auth.getUser(token);
     if (userError || !user) return res.status(401).json({ error: 'Invalid token' });
 
-    const userId = user.id;
-
-    if (method === 'POST') {
-      // Skapa ny MFA-secret
+    if (method === 'POST' && !req.body.verify) {
       const secret = speakeasy.generateSecret({
         name: `My HR App (${user.email})`,
         length: 20
       });
 
-      // Spara till användarens rad i databasen
       const { error } = await supabase
         .from('users')
         .update({ mfa_secret: secret.base32 })
-        .eq('email', user.email);
+        .eq('id', user.id);
 
       if (error) throw error;
 
-      // Generera QR-kod
-      const otpauth_url = secret.otpauth_url;
-      const qrImage = await qrcode.toDataURL(otpauth_url);
-
+      const qrImage = await qrcode.toDataURL(secret.otpauth_url);
       return res.status(200).json({ qr: qrImage, secret: secret.base32 });
     }
 
     if (method === 'POST' && req.body.verify) {
-      // Verifiera TOTP-kod
       const code = req.body.code;
       const { data, error } = await supabase
         .from('users')
         .select('mfa_secret')
-        .eq('email', user.email)
+        .eq('id', user.id)
         .single();
 
       if (error || !data.mfa_secret) return res.status(400).json({ error: 'MFA secret missing' });
@@ -56,6 +47,13 @@ module.exports = async function handler(req, res) {
         token: code,
         window: 1
       });
+
+      if (verified) {
+        await supabase
+          .from('users')
+          .update({ mfa_enabled: true })
+          .eq('id', user.id);
+      }
 
       return res.status(200).json({ valid: verified });
     }
