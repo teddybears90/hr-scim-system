@@ -1,7 +1,8 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>HR Admin Panel</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <style>
@@ -16,35 +17,39 @@
 <body>
   <div id="user-info">
     <span id="user-email"></span>
-    <button onclick="logout()">Logga ut</button>
-  </div>  <h1>HR Admin Panel</h1>  <form id="userForm" style="margin-top:2rem">
+    <button type="button" onclick="logout()">Logga ut</button>
+  </div>
+
+  <h1>HR Admin Panel</h1>
+
+  <form id="userForm" style="margin-top:2rem">
     <h3>Add User</h3>
     <input type="text" placeholder="First Name" id="first" required />
     <input type="text" placeholder="Last Name" id="last" required />
-    <input type="email" placeholder="Email" id="email" required /><select id="department">
-  <option value="">Select Department</option>
-  <option value="HR">HR</option>
-  <option value="IT">IT</option>
-  <option value="Finance">Finance</option>
-  <option value="Sales">Sales</option>
-  <option value="Marketing">Marketing</option>
-</select>
+    <input type="email" placeholder="Email" id="email" required />
+    <select id="department">
+      <option value="">Select Department</option>
+      <option value="HR">HR</option>
+      <option value="IT">IT</option>
+      <option value="Finance">Finance</option>
+      <option value="Sales">Sales</option>
+      <option value="Marketing">Marketing</option>
+    </select>
+    <select id="title">
+      <option value="">Select Title</option>
+      <option value="Manager">Manager</option>
+      <option value="Developer">Developer</option>
+      <option value="Analyst">Analyst</option>
+      <option value="Coordinator">Coordinator</option>
+      <option value="Engineer">Engineer</option>
+    </select>
+    <input type="text" placeholder="Employee #" id="empNum" />
+    <input type="date" placeholder="Start Date" id="start" />
+    <input type="date" placeholder="End Date" id="end" />
+    <button type="submit">Add User</button>
+  </form>
 
-<select id="title">
-  <option value="">Select Title</option>
-  <option value="Manager">Manager</option>
-  <option value="Developer">Developer</option>
-  <option value="Analyst">Analyst</option>
-  <option value="Coordinator">Coordinator</option>
-  <option value="Engineer">Engineer</option>
-</select>
-
-<input type="text" placeholder="Employee #" id="empNum" />
-<input type="date" placeholder="Start Date" id="start" />
-<input type="date" placeholder="End Date" id="end" />
-<button type="submit">Add User</button>
-
-  </form>  <table id="userTable">
+  <table id="userTable">
     <thead>
       <tr>
         <th>Name</th>
@@ -56,14 +61,17 @@
       </tr>
     </thead>
     <tbody></tbody>
-  </table>  <script>
-    const supabase = supabase.createClient(
+  </table>
+
+  <script type="module">
+    const { createClient } = supabase;
+    const supabaseClient = createClient(
       'https://pwxslkkxevuknredmfpb.supabase.co',
-      '<YOUR_ANON_KEY>' // Ersätt detta med din riktiga anon-nyckel
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB3eHNsa2t4ZXZ1a25yZWRtZnBiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMDA1MDcsImV4cCI6MjA2MDU3NjUwN30.vWwGu6q8mJy5vX1g584qSL73V9F3bhh2RSW-2dNeEc0'
     );
 
     async function checkSession() {
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session } } = await supabaseClient.auth.getSession();
       if (!session) {
         window.location.href = '/login.html';
       } else {
@@ -74,7 +82,7 @@
     }
 
     async function logout() {
-      await supabase.auth.signOut();
+      await supabaseClient.auth.signOut();
       localStorage.removeItem('sb_token');
       window.location.href = '/login.html';
     }
@@ -142,5 +150,6 @@
     });
 
     checkSession();
-  </script></body>
+  </script>
+</body>
 </html>
