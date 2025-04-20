@@ -1,5 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html><html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -18,12 +17,9 @@
   <div id="user-info">
     <span id="user-email"></span>
     <button type="button" onclick="logout()">Logga ut</button>
-  </div>
-
-  <h1>HR Admin Panel</h1>
-
-  <form id="userForm" style="margin-top:2rem">
-    <h3>Add User</h3>
+  </div>  <h1>HR Admin Panel</h1>  <form id="userForm" style="margin-top:2rem">
+    <h3 id="formTitle">Add User</h3>
+    <input type="hidden" id="editId" />
     <input type="text" placeholder="First Name" id="first" required />
     <input type="text" placeholder="Last Name" id="last" required />
     <input type="email" placeholder="Email" id="email" required />
@@ -46,10 +42,8 @@
     <input type="text" placeholder="Employee #" id="empNum" />
     <input type="date" placeholder="Start Date" id="start" />
     <input type="date" placeholder="End Date" id="end" />
-    <button type="submit">Add User</button>
-  </form>
-
-  <table id="userTable">
+    <button type="submit">Save</button>
+  </form>  <table id="userTable">
     <thead>
       <tr>
         <th>Name</th>
@@ -58,34 +52,26 @@
         <th>Title</th>
         <th>Start</th>
         <th>End</th>
+        <th>Actions</th>
       </tr>
     </thead>
     <tbody></tbody>
-  </table>
-
-  <script type="module">
+  </table>  <script type="module">
     const { createClient } = supabase;
     const supabaseClient = createClient(
       'https://pwxslkkxevuknredmfpb.supabase.co',
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB3eHNsa2t4ZXZ1a25yZWRtZnBiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMDA1MDcsImV4cCI6MjA2MDU3NjUwN30.vWwGu6q8mJy5vX1g584qSL73V9F3bhh2RSW-2dNeEc0'
     );
 
-    // Kontrollera inloggning
     async function checkSession() {
       const { data, error } = await supabaseClient.auth.getSession();
       const session = data.session;
-
-      if (!session) {
-        window.location.href = '/login.html';
-        return;
-      }
-
+      if (!session) return window.location.href = '/login.html';
       document.getElementById('user-email').textContent = `Inloggad som: ${session.user.email}`;
       localStorage.setItem('sb_token', session.access_token);
       loadUsers();
     }
 
-    // Fungerande logout
     window.logout = async function () {
       await supabaseClient.auth.signOut();
       localStorage.removeItem('sb_token');
@@ -98,7 +84,6 @@
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await res.json();
-
       const tbody = document.querySelector('#userTable tbody');
       tbody.innerHTML = '';
       if (data.Resources) {
@@ -110,6 +95,10 @@
             <td>${u.title || ''}</td>
             <td>${u.startDate || ''}</td>
             <td>${u.endDate || ''}</td>
+            <td>
+              <button onclick="editUser('${u.id}')">Edit</button>
+              <button onclick="deleteUser('${u.id}')">Delete</button>
+            </td>
           </tr>`;
           tbody.insertAdjacentHTML('beforeend', row);
         });
@@ -119,7 +108,7 @@
     document.getElementById('userForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const token = localStorage.getItem('sb_token');
-
+      const id = document.getElementById('editId').value;
       const user = {
         userName: (Date.now() + '-' + Math.random().toString(36).substr(2, 5)),
         name: {
@@ -135,26 +124,69 @@
         phoneNumbers: []
       };
 
-      const res = await fetch('/api/users', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(user)
-      });
-
-      if (res.status === 201) {
-        alert('User added!');
-        document.getElementById('userForm').reset();
-        loadUsers();
+      if (id) {
+        const res = await fetch(`/api/users?id=${id}`, {
+          method: 'PATCH',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(user)
+        });
+        if (res.ok) {
+          alert('User updated');
+        }
       } else {
-        const error = await res.json();
-        alert('Error: ' + error.error);
+        const res = await fetch('/api/users', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(user)
+        });
+        if (res.ok) {
+          alert('User added');
+        }
       }
+
+      document.getElementById('userForm').reset();
+      document.getElementById('formTitle').textContent = 'Add User';
+      loadUsers();
     });
 
+    window.editUser = async function (id) {
+      const token = localStorage.getItem('sb_token');
+      const res = await fetch(`/api/users?id=${id}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const user = await res.json();
+      document.getElementById('editId').value = user.id;
+      document.getElementById('first').value = user.name.givenName;
+      document.getElementById('last').value = user.name.familyName;
+      document.getElementById('email').value = user.emails[0]?.value || '';
+      document.getElementById('department').value = user.department || '';
+      document.getElementById('title').value = user.title || '';
+      document.getElementById('empNum').value = user.employeeNumber || '';
+      document.getElementById('start').value = user.startDate || '';
+      document.getElementById('end').value = user.endDate || '';
+      document.getElementById('formTitle').textContent = 'Edit User';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    window.deleteUser = async function (id) {
+      if (!confirm('Are you sure you want to delete this user?')) return;
+      const token = localStorage.getItem('sb_token');
+      const res = await fetch(`/api/users?id=${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.status === 204) {
+        alert('User deleted');
+        loadUsers();
+      }
+    };
+
     checkSession();
-  </script>
-</body>
+  </script></body>
 </html>
