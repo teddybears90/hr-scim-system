@@ -1,4 +1,3 @@
-// api/users.js (CommonJS-version med require)
 const { createClient } = require('@supabase/supabase-js');
 
 const supabase = createClient(
@@ -8,6 +7,12 @@ const supabase = createClient(
 
 module.exports = async function handler(req, res) {
   const { method } = req;
+
+  // === AUTENTISERING ===
+  const authHeader = req.headers.authorization;
+  if (!authHeader || authHeader !== `Bearer ${process.env.SCIM_SECRET}`) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
 
   try {
     switch (method) {
