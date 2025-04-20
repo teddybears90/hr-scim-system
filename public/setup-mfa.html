@@ -1,0 +1,53 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Setup MFA</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <style>
+    body { font-family: sans-serif; padding: 2rem; max-width: 600px; margin: auto; }
+    img { max-width: 200px; }
+    input { padding: 0.5rem; margin-top: 1rem; display: block; width: 100%; }
+    button { margin-top: 1rem; padding: 0.5rem 1rem; }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+  <h1>Setup MFA</h1>
+  <p>Scanna QR-koden med Google Authenticator eller liknande:</p>
+  <div id="qrcode"></div>
+  <input type="text" id="code" placeholder="Ange 6-siffrig kod från app" />
+  <button onclick="verifyMfaCode()">Verifiera kod</button>
+  <p id="result"></p>  <script type="module">
+    const { createClient } = supabase;
+    const supabaseClient = createClient(
+      'https://pwxslkkxevuknredmfpb.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB3eHNsa2t4ZXZ1a25yZWRtZnBiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMDA1MDcsImV4cCI6MjA2MDU3NjUwN30.vWwGu6q8mJy5vX1g584qSL73V9F3bhh2RSW-2dNeEc0'
+    );
+
+    const token = (await supabaseClient.auth.getSession()).data.session?.access_token;
+    if (!token) window.location.href = '/login.html';
+
+    const res = await fetch('/api/mfa', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const { qr } = await res.json();
+    document.getElementById('qrcode').innerHTML = `<img src="${qr}" />`;
+
+    window.verifyMfaCode = async () => {
+      const code = document.getElementById('code').value;
+      const verifyRes = await fetch('/api/mfa', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ verify: true, code })
+      });
+
+      const data = await verifyRes.json();
+      document.getElementById('result').textContent = data.valid ? 'Verifierad!' : 'Fel kod.';
+    };
+  </script></body>
+</html>
