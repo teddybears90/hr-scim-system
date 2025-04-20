@@ -1,12 +1,12 @@
-import { createClient } from '@supabase/supabase-js';
+// api/users.js (CommonJS-version med require)
+const { createClient } = require('@supabase/supabase-js');
 
-// Initiera Supabase-klienten
 const supabase = createClient(
-  process.env.https://pwxslkkxevuknredmfpb.supabase.co,
-  process.env.eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB3eHNsa2t4ZXZ1a25yZWRtZnBiIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0NTAwMDUwNywiZXhwIjoyMDYwNTc2NTA3fQ.m7QLOS47FT_jHdWHLwW7mBJ31h3dXK-KpmX5G0jJ5Qo
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_KEY
 );
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   const { method } = req;
 
   try {
@@ -91,4 +91,4 @@ export default async function handler(req, res) {
     console.error('SCIM handler error:', err.message);
     return res.status(500).json({ error: err.message });
   }
-}
+};
