@@ -72,12 +72,12 @@
         loadUsers();
       }
     }
-
-    function logout() {
-      supabase.auth.signOut();
-      localStorage.removeItem('sb_token');
-      window.location.href = '/login.html';
-    }
+    
+  async function logout() {
+  await supabase.auth.signOut();
+  localStorage.removeItem('sb_token');
+  window.location.href = '/login.html';
+}
 
     async function loadUsers() {
       const token = localStorage.getItem('sb_token');
