@@ -1,78 +1,42 @@
 <!DOCTYPE html><html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Login with MFA</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.5/dist/umd/supabase.min.js"></script>
   <style>
-    body { font-family: sans-serif; padding: 2rem; max-width: 400px; margin: auto; }
-    input, button { margin: 0.5rem 0; padding: 0.5rem; width: 100%; }
-    #mfa-form { display: none; }
+    body { font-family: sans-serif; max-width: 400px; margin: auto; padding-top: 50px; }
+    input, button { display: block; width: 100%; margin-bottom: 10px; padding: 8px; }
   </style>
 </head>
 <body>
-  <h1>Login</h1>
-  <form id="login-form">
-    <input type="email" id="email" placeholder="Email" required />
-    <input type="password" id="password" placeholder="Password" required />
-    <button type="submit">Login</button>
-  </form>  <form id="mfa-form">
-    <input type="text" id="mfa-code" placeholder="Enter MFA code" required />
-    <button type="button" onclick="verifyMfa()">Verify Code</button>
-  </form>
-  <p id="message"></p>  <script type="module">
-    const { createClient } = supabase;
-    const supabaseClient = createClient(
-      'https://pwxslkkxevuknredmfpb.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB3eHNsa2t4ZXZ1a25yZWRtZnBiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMDA1MDcsImV4cCI6MjA2MDU3NjUwN30.vWwGu6q8mJy5vX1g584qSL73V9F3bhh2RSW-2dNeEc0'
-    );
+  <h2>Logga in</h2>
+  <input type="email" id="email" placeholder="Email" required>
+  <input type="password" id="password" placeholder="Lösenord" required>
+  <button onclick="login()">Logga in</button>
+  <p id="message"></p>  <script>
+    const SUPABASE_URL = "https://pwxslkkxevuknredmfpb.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB3eHNsa2t4ZXZ1a25yZWRtZnBiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMDA1MDcsImV4cCI6MjA2MDU3NjUwN30.vWwGu6q8mJy5vX1g584qSL73V9F3bhh2RSW-2dNeEc0";
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    let accessToken = null;
-
-    document.getElementById('login-form').addEventListener('submit', async (e) => {
-      e.preventDefault();
+    async function login() {
       const email = document.getElementById('email').value;
       const password = document.getElementById('password').value;
+      const msg = document.getElementById('message');
 
-      const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
-      if (error) return showMessage('Login failed: ' + error.message);
+      msg.textContent = 'Loggar in...';
 
-      accessToken = data.session.access_token;
-      localStorage.setItem('sb_token', accessToken);
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      console.log("Login result:", data, error);
 
-      const userRes = await supabaseClient.from('users').select('mfa_enabled').eq('email', email).single();
-
-      if (userRes.data?.mfa_enabled) {
-        document.getElementById('login-form').style.display = 'none';
-        document.getElementById('mfa-form').style.display = 'block';
-        showMessage('MFA enabled. Enter your code.');
+      if (error) {
+        msg.textContent = error.message;
       } else {
-        window.location.href = '/Admin.html';
+        msg.textContent = 'Inloggad! Omdirigerar...';
+        setTimeout(() => {
+          window.location.href = '/Admin.html';
+        }, 1000);
       }
-    });
-
-    window.verifyMfa = async () => {
-      const code = document.getElementById('mfa-code').value;
-      const res = await fetch('/api/mfa', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ verify: true, code })
-      });
-
-      const result = await res.json();
-      if (result.valid) {
-        showMessage('MFA verified. Redirecting...');
-        window.location.href = '/Admin.html';
-      } else {
-        showMessage('Invalid MFA code.');
-      }
-    };
-
-    function showMessage(msg) {
-      document.getElementById('message').textContent = msg;
     }
   </script></body>
 </html>
