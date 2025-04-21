@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -19,7 +20,11 @@
   <div id="user-info">
     <span id="user-email"></span>
     <button type="button" onclick="logout()">Logga ut</button>
-  </div>  <h1>HR Admin Panel</h1>  <form id="userForm" style="margin-top:2rem">
+  </div>
+
+  <h1>HR Admin Panel</h1>
+
+  <form id="userForm" style="margin-top:2rem">
     <h3 id="formTitle">Add User</h3>
     <input type="hidden" id="editId" />
     <label>First Name:</label>
@@ -44,7 +49,9 @@
       <button type="submit">Save</button>
       <button type="button" onclick="cancelEdit()">Cancel</button>
     </div>
-  </form>  <table id="userTable">
+  </form>
+
+  <table id="userTable">
     <thead>
       <tr>
         <th>Name</th>
@@ -59,7 +66,9 @@
       </tr>
     </thead>
     <tbody></tbody>
-  </table>  <script type="module">
+  </table>
+
+  <script type="module">
     import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
     const supabaseClient = createClient(
@@ -91,31 +100,40 @@
 
     async function loadUsers() {
       const token = localStorage.getItem('sb_token');
+      console.log('Laddar användare...');
+
       const res = await fetch('/api/users', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
+
       const data = await res.json();
+      console.log('Svar från API:', data);
+
       const tbody = document.querySelector('#userTable tbody');
       tbody.innerHTML = '';
-      if (data.Resources) {
-        data.Resources.forEach(u => {
-          const row = `<tr>
-            <td>${u.name?.givenName || ''} ${u.name?.familyName || ''}</td>
-            <td>${u.employeeNumber || ''}</td>
-            <td>${u.emails?.[0]?.value || ''}</td>
-            <td>${u.department || ''}</td>
-            <td>${u.manager_name || ''}</td>
-            <td>${u.title || ''}</td>
-            <td>${u.startDate || ''}</td>
-            <td>${u.endDate || ''}</td>
-            <td>
-              <button onclick="editUser('${u.id}')">Edit</button>
-              <button onclick="deleteUser('${u.id}')">Delete</button>
-            </td>
-          </tr>`;
-          tbody.insertAdjacentHTML('beforeend', row);
-        });
+
+      if (!data.Resources || data.Resources.length === 0) {
+        console.warn('Inga användare hittades eller felaktigt format!');
+        return;
       }
+
+      data.Resources.forEach(u => {
+        const row = `<tr>
+          <td>${u.name?.givenName || ''} ${u.name?.familyName || ''}</td>
+          <td>${u.employeeNumber || ''}</td>
+          <td>${u.emails?.[0]?.value || ''}</td>
+          <td>${u.department || ''}</td>
+          <td>${u.manager_name || ''}</td>
+          <td>${u.title || ''}</td>
+          <td>${u.startDate || ''}</td>
+          <td>${u.endDate || ''}</td>
+          <td>
+            <button onclick="editUser('${u.id}')">Edit</button>
+            <button onclick="deleteUser('${u.id}')">Delete</button>
+          </td>
+        </tr>`;
+        tbody.insertAdjacentHTML('beforeend', row);
+      });
     }
 
     async function loadManagers() {
@@ -155,7 +173,8 @@
       const res = await fetch(`/api/users?id=${id}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
-      const user = await res.json();
+      const response = await res.json();
+      const user = response?.Resources?.[0];
       if (!user || !user.name) return alert('Kunde inte hämta användardata');
 
       document.getElementById('editId').value = user.id;
@@ -203,8 +222,8 @@
         },
         emails: [{ value: document.getElementById('email').value }],
         department: document.getElementById('department').value,
-        manager_id: manager_id,
-        manager_name: manager_name,
+        manager_id,
+        manager_name,
         title: document.getElementById('title').value,
         employeeNumber: document.getElementById('empNum').value,
         startDate: document.getElementById('start').value || null,
@@ -219,6 +238,8 @@
       const url = id ? `/api/users?id=${id}` : '/api/users';
       const method = id ? 'PATCH' : 'POST';
 
+      console.log('Saving user:', user);
+
       const res = await fetch(url, {
         method,
         headers: {
@@ -228,17 +249,20 @@
         body: JSON.stringify(user)
       });
 
+      const result = await res.json();
+      console.log('Response:', result);
+
       if (res.ok) {
         alert(id ? 'User updated' : 'User added');
         cancelEdit();
         loadUsers();
       } else {
-        const error = await res.json();
-        alert('Error: ' + error.error);
+        alert('Error: ' + result.error);
       }
     });
 
     loadUsers();
     loadManagers();
-  </script></body>
+  </script>
+</body>
 </html>
