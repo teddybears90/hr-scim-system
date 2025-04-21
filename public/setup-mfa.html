@@ -1,5 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html><html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -7,36 +6,41 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <style>
     body { font-family: sans-serif; padding: 2rem; max-width: 600px; margin: auto; }
-    img { max-width: 200px; }
+    img { max-width: 200px; margin-bottom: 1rem; }
     input { padding: 0.5rem; margin-top: 1rem; display: block; width: 100%; }
     button { margin-top: 1rem; padding: 0.5rem 1rem; }
-    .hidden { display: none; }
+    code { background: #f0f0f0; padding: 0.3rem; border-radius: 4px; }
   </style>
 </head>
 <body>
   <h1>Setup MFA</h1>
-  <p>Scanna QR-koden med Google Authenticator eller liknande:</p>
+  <p>Scan this QR code with Google Authenticator or similar app:</p>
   <div id="qrcode"></div>
-  <input type="text" id="code" placeholder="Ange 6-siffrig kod från app" />
-  <button onclick="verifyMfaCode()">Verifiera kod</button>
-  <p id="result"></p>
-
-  <script type="module">
+  <input type="text" id="code" placeholder="Enter 6-digit code from app" />
+  <button onclick="verifyMfaCode()">Verify Code</button>
+  <p id="result"></p>  <script type="module">
     const { createClient } = supabase;
     const supabaseClient = createClient(
       'https://pwxslkkxevuknredmfpb.supabase.co',
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB3eHNsa2t4ZXZ1a25yZWRtZnBiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMDA1MDcsImV4cCI6MjA2MDU3NjUwN30.vWwGu6q8mJy5vX1g584qSL73V9F3bhh2RSW-2dNeEc0'
     );
 
-    const token = (await supabaseClient.auth.getSession()).data.session?.access_token;
-    if (!token) window.location.href = '/login.html';
+    const session = (await supabaseClient.auth.getSession()).data.session;
+    if (!session) window.location.href = '/login.html';
+
+    const token = session.access_token;
 
     const res = await fetch('/api/mfa', {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${token}` }
     });
-    const { qr } = await res.json();
-    document.getElementById('qrcode').innerHTML = `<img src="${qr}" />`;
+
+    const { qr, secret } = await res.json();
+
+    document.getElementById('qrcode').innerHTML = `
+      <img src="${qr}" alt="Scan QR" />
+      <p>Manual setup key: <code>${secret}</code></p>
+    `;
 
     window.verifyMfaCode = async () => {
       const code = document.getElementById('code').value;
@@ -50,8 +54,7 @@
       });
 
       const data = await verifyRes.json();
-      document.getElementById('result').textContent = data.valid ? 'Verifierad!' : 'Fel kod.';
+      document.getElementById('result').textContent = data.valid ? 'Verified!' : 'Invalid code.';
     };
-  </script>
-</body>
+  </script></body>
 </html>
