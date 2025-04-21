@@ -104,7 +104,7 @@
             <td>${u.employeeNumber || ''}</td>
             <td>${u.emails?.[0]?.value || ''}</td>
             <td>${u.department || ''}</td>
-            <td>${u.manager || ''}</td>
+            <td>${u.manager_name || ''}</td>
             <td>${u.title || ''}</td>
             <td>${u.startDate || ''}</td>
             <td>${u.endDate || ''}</td>
@@ -163,7 +163,7 @@
       document.getElementById('last').value = user.name.familyName || '';
       document.getElementById('email').value = user.emails?.[0]?.value || '';
       document.getElementById('department').value = user.department || '';
-      document.getElementById('manager').value = user.manager || '';
+      document.getElementById('manager').value = user.manager_id || '';
       document.getElementById('title').value = user.title || '';
       document.getElementById('empNum').value = user.employeeNumber || '';
       document.getElementById('start').value = user.startDate || '';
@@ -188,13 +188,14 @@
       }
     };
 
-    loadUsers();
-    loadManagers();
-
     document.getElementById('userForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const token = localStorage.getItem('sb_token');
       const id = document.getElementById('editId').value;
+      const managerSelect = document.getElementById('manager');
+      const manager_id = managerSelect.value;
+      const manager_name = managerSelect.options[managerSelect.selectedIndex].text;
+
       const user = {
         name: {
           givenName: document.getElementById('first').value,
@@ -202,7 +203,8 @@
         },
         emails: [{ value: document.getElementById('email').value }],
         department: document.getElementById('department').value,
-        manager: document.getElementById('manager').value,
+        manager_id: manager_id,
+        manager_name: manager_name,
         title: document.getElementById('title').value,
         employeeNumber: document.getElementById('empNum').value,
         startDate: document.getElementById('start').value || null,
@@ -235,5 +237,8 @@
         alert('Error: ' + error.error);
       }
     });
+
+    loadUsers();
+    loadManagers();
   </script></body>
 </html>
