@@ -7,6 +7,7 @@
   <style>
     body { font-family: sans-serif; max-width: 400px; margin: auto; padding-top: 50px; }
     input, button { display: block; width: 100%; margin-bottom: 10px; padding: 8px; }
+    #message { color: red; font-weight: bold; }
   </style>
 </head>
 <body>
@@ -30,8 +31,10 @@
       console.log("Login result:", data, error);
 
       if (error) {
-        msg.textContent = error.message;
+        msg.textContent = `Fel: ${error.message || 'Okänt fel'}`;
+        console.error("Inloggningsfel:", error);
       } else {
+        msg.style.color = 'green';
         msg.textContent = 'Inloggad! Omdirigerar...';
         setTimeout(() => {
           window.location.href = '/Admin.html';
