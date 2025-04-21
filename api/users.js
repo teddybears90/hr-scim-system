@@ -2,7 +2,7 @@ const { createClient } = require('@supabase/supabase-js');
 
 const supabase = createClient( process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY );
 
-module.exports = async function handler(req, res) { const token = req.headers.authorization?.replace('Bearer ', ''); console.log("Incoming headers:", req.headers); console.log("Extracted token:", token);
+module.exports = async function handler(req, res) { const token = req.headers.authorization?.replace('Bearer ', '') || req.headers.Authorization?.replace('Bearer ', ''); console.log("Incoming headers:", req.headers); console.log("Extracted token:", token);
 
 if (!token) return res.status(401).json({ error: 'Authorization token missing' });
 
