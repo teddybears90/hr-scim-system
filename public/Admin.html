@@ -1,7 +1,7 @@
 <!DOCTYPE html><html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>HR Admin Panel</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.5/dist/umd/supabase.min.js"></script>
   <style>
@@ -37,25 +37,12 @@
     const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     async function loadUsers() {
-      const { data: { session }, error } = await supabase.auth.getSession();
-      let token = session?.access_token;
+      const { data: sessionData } = await supabase.auth.getSession();
+      const session = sessionData?.session;
+      const token = session?.access_token;
       const user = session?.user;
 
-      // Fallback från localStorage
-      if (!token) {
-        try {
-          const stored = localStorage.getItem('supabase.auth.token');
-          if (stored) {
-            const parsed = JSON.parse(stored);
-            token = parsed?.currentSession?.access_token;
-          }
-        } catch (e) {
-          console.error("Kunde inte läsa token från localStorage", e);
-        }
-      }
-
       if (!token || !user) {
-        console.warn("Ingen giltig session hittades, redirectar...");
         window.location.href = "/login.html";
         return;
       }
@@ -69,8 +56,6 @@
       });
 
       const result = await res.json();
-      console.log("API response:", result);
-
       const tableBody = document.querySelector('#userTable tbody');
       tableBody.innerHTML = '';
 
