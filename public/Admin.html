@@ -36,11 +36,12 @@
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB3eHNsa2t4ZXZ1a25yZWRtZnBiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMDA1MDcsImV4cCI6MjA2MDU3NjUwN30.vWwGu6q8mJy5vX1g584qSL73V9F3bhh2RSW-2dNeEc0";
     const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    async function loadUsers() {
-      const sessionData = await supabase.auth.getSession();
-      const session = sessionData?.data?.session;
+    supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("Auth event:", event);
+      console.log("Session:", session);
 
       if (!session || !session.user || !session.access_token) {
+        console.warn("Ingen aktiv session - redirect till login.");
         window.location.href = "/login.html";
         return;
       }
@@ -57,6 +58,8 @@
       });
 
       const result = await res.json();
+      console.log("API-response:", result);
+
       const tableBody = document.querySelector('#userTable tbody');
       tableBody.innerHTML = '';
 
@@ -87,7 +90,7 @@
         `;
         tableBody.appendChild(row);
       });
-    }
+    });
 
     function editUser(id) {
       alert('Edit clicked for user ID: ' + id);
@@ -101,7 +104,5 @@
       await supabase.auth.signOut();
       window.location.href = "/login.html";
     }
-
-    loadUsers();
   </script></body>
 </html>
