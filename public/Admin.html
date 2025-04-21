@@ -1,4 +1,4 @@
-<!-- Admin.html med session-koll + managerfält --><!DOCTYPE html><html lang="en">
+<!-- Admin.html med omordning av fält --><!DOCTYPE html><html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -22,6 +22,7 @@
     <input type="hidden" id="editId" />
     <input type="text" placeholder="First Name" id="first" required />
     <input type="text" placeholder="Last Name" id="last" required />
+    <input type="text" placeholder="Employee #" id="empNum" />
     <input type="email" placeholder="Email" id="email" required />
     <select id="department">
       <option value="">Select Department</option>
@@ -31,6 +32,9 @@
       <option value="Sales">Sales</option>
       <option value="Marketing">Marketing</option>
     </select>
+    <select id="manager">
+      <option value="">Select Manager</option>
+    </select>
     <select id="title">
       <option value="">Select Title</option>
       <option value="Manager">Manager</option>
@@ -39,23 +43,20 @@
       <option value="Coordinator">Coordinator</option>
       <option value="Engineer">Engineer</option>
     </select>
-    <input type="text" placeholder="Employee #" id="empNum" />
     <input type="date" placeholder="Start Date" id="start" />
     <input type="date" placeholder="End Date" id="end" />
-    <select id="manager">
-      <option value="">Select Manager</option>
-    </select>
     <button type="submit">Save</button>
   </form>  <table id="userTable">
     <thead>
       <tr>
         <th>Name</th>
+        <th>Employee #</th>
         <th>Email</th>
         <th>Department</th>
+        <th>Manager</th>
         <th>Title</th>
         <th>Start</th>
         <th>End</th>
-        <th>Manager</th>
         <th>Actions</th>
       </tr>
     </thead>
@@ -122,12 +123,13 @@
         data.Resources.forEach(u => {
           const row = `<tr>
             <td>${u.name.givenName} ${u.name.familyName}</td>
+            <td>${u.employeeNumber || ''}</td>
             <td>${u.emails[0]?.value || ''}</td>
             <td>${u.department || ''}</td>
+            <td>${u.manager || ''}</td>
             <td>${u.title || ''}</td>
             <td>${u.startDate || ''}</td>
             <td>${u.endDate || ''}</td>
-            <td>${u.manager || ''}</td>
             <td>
               <button onclick="editUser('${u.id}')">Edit</button>
               <button onclick="deleteUser('${u.id}')">Delete</button>
@@ -149,11 +151,11 @@
         },
         emails: [{ value: document.getElementById('email').value }],
         department: document.getElementById('department').value,
+        manager: document.getElementById('manager').value,
         title: document.getElementById('title').value,
         employeeNumber: document.getElementById('empNum').value,
         startDate: document.getElementById('start').value || null,
         endDate: document.getElementById('end').value || null,
-        manager: document.getElementById('manager').value,
         phoneNumbers: []
       };
 
