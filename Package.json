@@ -1,15 +1,25 @@
 {
   "name": "hr-scim-system",
   "version": "1.0.0",
-  "type": "module"
-  "description": "SCIM API + frontend för HR-system",
+  "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "vercel dev"
+    "test": "echo \"No test specified\" && exit 0"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/teddybears90/hr-scim-system.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/teddybears90/hr-scim-system/issues"
+  },
+  "homepage": "https://github.com/teddybears90/hr-scim-system#readme",
   "dependencies": {
-    "@supabase/supabase-js": "^2.39.4"
-  },
-  "type": "module",
-  "license": "MIT"
+    "@supabase/supabase-js": "^2.0.0",
+    "speakeasy": "^2.0.0",
+    "qrcode": "^1.5.0"
+  }
 }
