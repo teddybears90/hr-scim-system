@@ -1,4 +1,4 @@
-<!-- START: Admin.html with edit fix --><!DOCTYPE html><html lang="en">
+<!-- Admin.html med session-koll + managerfält --><!DOCTYPE html><html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -42,6 +42,9 @@
     <input type="text" placeholder="Employee #" id="empNum" />
     <input type="date" placeholder="Start Date" id="start" />
     <input type="date" placeholder="End Date" id="end" />
+    <select id="manager">
+      <option value="">Select Manager</option>
+    </select>
     <button type="submit">Save</button>
   </form>  <table id="userTable">
     <thead>
@@ -52,6 +55,7 @@
         <th>Title</th>
         <th>Start</th>
         <th>End</th>
+        <th>Manager</th>
         <th>Actions</th>
       </tr>
     </thead>
@@ -70,13 +74,41 @@
       document.getElementById('user-email').textContent = `Inloggad som: ${session.user.email}`;
       localStorage.setItem('sb_token', session.access_token);
       loadUsers();
+      loadManagers();
     }
+
+    setInterval(async () => {
+      const { data } = await supabaseClient.auth.getSession();
+      if (!data?.session) {
+        alert('Din session har gått ut. Du loggas ut.');
+        window.location.href = '/login.html';
+      }
+    }, 30000);
 
     window.logout = async function () {
       await supabaseClient.auth.signOut();
       localStorage.removeItem('sb_token');
       window.location.href = '/login.html';
     };
+
+    async function loadManagers() {
+      const token = localStorage.getItem('sb_token');
+      const res = await fetch('/api/users', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await res.json();
+      const select = document.getElementById('manager');
+      select.innerHTML = '<option value="">Select Manager</option>';
+      if (data.Resources) {
+        data.Resources.forEach(u => {
+          const fullName = `${u.name.givenName} ${u.name.familyName}`;
+          const option = document.createElement('option');
+          option.value = u.employeeNumber;
+          option.textContent = fullName;
+          select.appendChild(option);
+        });
+      }
+    }
 
     async function loadUsers() {
       const token = localStorage.getItem('sb_token');
@@ -95,6 +127,7 @@
             <td>${u.title || ''}</td>
             <td>${u.startDate || ''}</td>
             <td>${u.endDate || ''}</td>
+            <td>${u.manager || ''}</td>
             <td>
               <button onclick="editUser('${u.id}')">Edit</button>
               <button onclick="deleteUser('${u.id}')">Delete</button>
@@ -120,11 +153,14 @@
         employeeNumber: document.getElementById('empNum').value,
         startDate: document.getElementById('start').value || null,
         endDate: document.getElementById('end').value || null,
+        manager: document.getElementById('manager').value,
         phoneNumbers: []
       };
+
       if (!id) {
         user.userName = (Date.now() + '-' + Math.random().toString(36).substr(2, 5));
       }
+
       const url = id ? `/api/users?id=${id}` : '/api/users';
       const method = id ? 'PATCH' : 'POST';
 
@@ -148,42 +184,6 @@
       }
     });
 
-    window.editUser = async function (id) {
-      const token = localStorage.getItem('sb_token');
-      const res = await fetch(`/api/users?id=${id}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      const user = await res.json();
-      console.log('Editing user:', user);
-      if (!user || !user.name) return alert('Kunde inte hämta användardata');
-
-      document.getElementById('editId').value = user.id;
-      document.getElementById('first').value = user.name.givenName || '';
-      document.getElementById('last').value = user.name.familyName || '';
-      document.getElementById('email').value = user.emails?.[0]?.value || '';
-      document.getElementById('department').value = user.department || '';
-      document.getElementById('title').value = user.title || '';
-      document.getElementById('empNum').value = user.employeeNumber || '';
-      document.getElementById('start').value = user.startDate || '';
-      document.getElementById('end').value = user.endDate || '';
-      document.getElementById('formTitle').textContent = 'Edit User';
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    };
-
-    window.deleteUser = async function (id) {
-      if (!confirm('Are you sure you want to delete this user?')) return;
-      const token = localStorage.getItem('sb_token');
-      const res = await fetch(`/api/users?id=${id}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (res.status === 204) {
-        alert('User deleted');
-        loadUsers();
-      }
-    };
-
     checkSession();
   </script></body>
 </html>
-<!-- END: Admin.html with edit fix -->
