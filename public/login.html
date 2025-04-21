@@ -30,7 +30,7 @@
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
       if (error) {
-        msg.textContent = 'Fel: ' + error.message;
+        msg.textContent = 'Fel: ' + (error.message || 'Kontrollera inloggningsuppgifterna');
       } else {
         msg.style.color = 'green';
         msg.textContent = 'Inloggad! Omdirigerar...';
