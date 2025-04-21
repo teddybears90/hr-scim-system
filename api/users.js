@@ -31,7 +31,14 @@ module.exports = async function handler(req, res) {
       }
       const { data, error } = await supabase.from('users').select('*');
       if (error) throw error;
-      return res.status(200).json({ Resources: data });
+
+      // Säkerställ employeeNumber syns tydligt i varje användare
+      const safeData = data.map(u => ({
+        ...u,
+        employeeNumber: u.employeeNumber || u.employeenumber || ''
+      }));
+
+      return res.status(200).json({ Resources: safeData });
     }
 
     if (method === 'POST') {
