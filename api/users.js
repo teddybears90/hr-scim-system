@@ -2,9 +2,7 @@ const { createClient } = require('@supabase/supabase-js');
 
 const supabase = createClient( process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY );
 
-module.exports = async function handler(req, res) { const token = req.headers.authorization?.replace('Bearer ', '') || req.headers.Authorization?.replace('Bearer ', ''); console.log("Incoming headers:", req.headers); console.log("Extracted token:", token);
-
-if (!token) return res.status(401).json({ error: 'Authorization token missing' });
+module.exports = async function handler(req, res) { const token = req.headers.authorization?.replace('Bearer ', ''); if (!token) return res.status(401).json({ error: 'Authorization token missing' });
 
 const { method, query, body } = req;
 
@@ -97,5 +95,5 @@ if (method === 'DELETE') {
 
 return res.status(405).json({ error: 'Method not allowed' });
 
-} catch (err) { console.error("Server error:", err); return res.status(500).json({ error: err.message }); } };
+} catch (err) { console.error(err); return res.status(500).json({ error: err.message }); } };
 
