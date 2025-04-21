@@ -12,7 +12,7 @@ if (method === 'GET') {
   if (query.id) {
     const { data, error } = await supabase.from('users').select('*').eq('id', query.id).single();
     if (error) throw error;
-    return res.status(200).json(data);
+    return res.status(200).json({ Resources: [data] });
   }
   const { data, error } = await supabase.from('users').select('*');
   if (error) throw error;
@@ -20,7 +20,20 @@ if (method === 'GET') {
 }
 
 if (method === 'POST') {
-  const { name, emails, department, title, employeeNumber, startDate, endDate, phoneNumbers, manager_id, manager_name, userName } = body;
+  const {
+    name,
+    emails,
+    department,
+    title,
+    employeeNumber,
+    startDate,
+    endDate,
+    phoneNumbers,
+    manager_id,
+    manager_name,
+    userName
+  } = body;
+
   const insert = {
     name,
     emails,
@@ -34,6 +47,7 @@ if (method === 'POST') {
     manager_name,
     userName
   };
+
   const { data, error } = await supabase.from('users').insert(insert).select().single();
   if (error) throw error;
   return res.status(201).json(data);
@@ -41,7 +55,19 @@ if (method === 'POST') {
 
 if (method === 'PATCH') {
   const { id } = query;
-  const { name, emails, department, title, employeeNumber, startDate, endDate, phoneNumbers, manager_id, manager_name } = body;
+  const {
+    name,
+    emails,
+    department,
+    title,
+    employeeNumber,
+    startDate,
+    endDate,
+    phoneNumbers,
+    manager_id,
+    manager_name
+  } = body;
+
   const update = {
     name,
     emails,
@@ -54,6 +80,7 @@ if (method === 'PATCH') {
     manager_id,
     manager_name
   };
+
   const { data, error } = await supabase.from('users').update(update).eq('id', id).select().single();
   if (error) throw error;
   return res.status(200).json(data);
