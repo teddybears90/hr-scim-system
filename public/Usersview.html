@@ -41,11 +41,11 @@
       data.forEach(user => {
         const row = document.createElement("tr");
         row.innerHTML = `
-          <td>${user.name?.givenName || ''} ${user.name?.familyName || ''}</td>
-          <td>${user.emails?.[0]?.value || user.email || ''}</td>
+          <td>${user.first_name || ''} ${user.last_name || ''}</td>
+          <td>${user.email || ''}</td>
           <td>${user.department || ''}</td>
           <td>${user.title || ''}</td>
-          <td>${user.employeeNumber || user.employee_number || ''}</td>
+          <td>${user.employee_number || ''}</td>
         `;
         tbody.appendChild(row);
       });
