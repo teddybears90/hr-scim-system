@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>HR Admin Panel</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.5/dist/umd/supabase.min.js"></script>
   <style>
     table { border-collapse: collapse; width: 100%; }
     th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
@@ -30,8 +31,24 @@
   </table>
 
   <script>
+    const SUPABASE_URL = "https://pwxslkkxevuknredmfpb.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB3eHNsa2t4ZXZ1a25yZWRtZnBiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMDA1MDcsImV4cCI6MjA2MDU3NjUwN30.vWwGu6q8mJy5vX1g584qSL73V9F3bhh2RSW-2dNeEc0";
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
     async function loadUsers() {
-      const res = await fetch('/api/users');
+      const { data: session } = await supabase.auth.getSession();
+      const token = session?.session?.access_token;
+
+      if (!token) {
+        alert("Du är inte inloggad.");
+        return;
+      }
+
+      const res = await fetch('/api/users', {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
       const result = await res.json();
       const tableBody = document.querySelector('#userTable tbody');
       tableBody.innerHTML = '';
