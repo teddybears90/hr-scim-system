@@ -1,10 +1,10 @@
 {
   "name": "hr-scim-system",
   "version": "1.0.0",
-  "description": "",
+  "description": "HR-system med SCIM och MFA",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"No test specified\" && exit 0"
   },
   "repository": {
     "type": "git",
