@@ -1,5 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html><html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,11 +8,12 @@
     table { border-collapse: collapse; width: 100%; }
     th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
     th { background-color: #f2f2f2; }
+    #user-info { margin-bottom: 1rem; }
   </style>
 </head>
 <body>
   <h1>HR Admin Panel</h1>
-  <table id="userTable">
+  <div id="user-info">Inloggad som: <span id="user-email">...</span> <button onclick="logout()">Logga ut</button></div>  <table id="userTable">
     <thead>
       <tr>
         <th>Name</th>
@@ -28,27 +28,29 @@
       </tr>
     </thead>
     <tbody></tbody>
-  </table>
-
-  <script>
+  </table>  <script>
     const SUPABASE_URL = "https://pwxslkkxevuknredmfpb.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB3eHNsa2t4ZXZ1a25yZWRtZnBiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMDA1MDcsImV4cCI6MjA2MDU3NjUwN30.vWwGu6q8mJy5vX1g584qSL73V9F3bhh2RSW-2dNeEc0";
     const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     async function loadUsers() {
-      const { data: session } = await supabase.auth.getSession();
-      const token = session?.session?.access_token;
+      const session = await supabase.auth.getSession();
+      const token = session?.data?.session?.access_token;
+      const user = session?.data?.session?.user;
 
-      if (!token) {
-        alert("Du är inte inloggad.");
+      if (!token || !user) {
+        window.location.href = "/login.html";
         return;
       }
+
+      document.getElementById("user-email").textContent = user.email;
 
       const res = await fetch('/api/users', {
         headers: {
           Authorization: `Bearer ${token}`
         }
       });
+
       const result = await res.json();
       const tableBody = document.querySelector('#userTable tbody');
       tableBody.innerHTML = '';
@@ -90,7 +92,11 @@
       alert('Delete clicked for user ID: ' + id);
     }
 
+    async function logout() {
+      await supabase.auth.signOut();
+      window.location.href = "/login.html";
+    }
+
     loadUsers();
-  </script>
-</body>
+  </script></body>
 </html>
