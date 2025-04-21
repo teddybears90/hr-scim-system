@@ -36,18 +36,29 @@
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB3eHNsa2t4ZXZ1a25yZWRtZnBiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMDA1MDcsImV4cCI6MjA2MDU3NjUwN30.vWwGu6q8mJy5vX1g584qSL73V9F3bhh2RSW-2dNeEc0";
     const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log("Auth event:", event);
-      console.log("Session:", session);
+    async function loadUsers() {
+      const { data: { session }, error } = await supabase.auth.getSession();
+      let token = session?.access_token;
+      const user = session?.user;
 
-      if (!session || !session.user || !session.access_token) {
-        console.warn("Ingen aktiv session - redirect till login.");
+      // Fallback från localStorage
+      if (!token) {
+        try {
+          const stored = localStorage.getItem('supabase.auth.token');
+          if (stored) {
+            const parsed = JSON.parse(stored);
+            token = parsed?.currentSession?.access_token;
+          }
+        } catch (e) {
+          console.error("Kunde inte läsa token från localStorage", e);
+        }
+      }
+
+      if (!token || !user) {
+        console.warn("Ingen giltig session hittades, redirectar...");
         window.location.href = "/login.html";
         return;
       }
-
-      const user = session.user;
-      const token = session.access_token;
 
       document.getElementById("user-email").textContent = user.email;
 
@@ -58,7 +69,7 @@
       });
 
       const result = await res.json();
-      console.log("API-response:", result);
+      console.log("API response:", result);
 
       const tableBody = document.querySelector('#userTable tbody');
       tableBody.innerHTML = '';
@@ -90,7 +101,7 @@
         `;
         tableBody.appendChild(row);
       });
-    });
+    }
 
     function editUser(id) {
       alert('Edit clicked for user ID: ' + id);
@@ -104,5 +115,7 @@
       await supabase.auth.signOut();
       window.location.href = "/login.html";
     }
+
+    loadUsers();
   </script></body>
 </html>
