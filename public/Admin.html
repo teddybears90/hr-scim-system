@@ -1,90 +1,239 @@
-<script type="module">
-  const { createClient } = supabase;
-  const supabaseClient = createClient(
-    'https://pwxslkkxevuknredmfpb.supabase.co',
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB3eHNsa2t4ZXZ1a25yZWRtZnBiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMDA1MDcsImV4cCI6MjA2MDU3NjUwN30.vWwGu6q8mJy5vX1g584qSL73V9F3bhh2RSW-2dNeEc0'
-  );
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>HR Admin Panel</title>
+  <style>
+    body { font-family: Arial; padding: 2rem; }
+    table { border-collapse: collapse; width: 100%; margin-top: 2rem; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    th { background-color: #f4f4f4; }
+    input, select, button, label { padding: 0.5rem; margin: 0.2rem; display: block; }
+    #user-info { margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; }
+    form label { font-weight: bold; margin-top: 0.5rem; }
+    .form-buttons { display: flex; gap: 1rem; }
+    .editing { background-color: #fff8cc; border: 2px solid #ffcd00; padding: 1rem; border-radius: 5px; }
+  </style>
+</head>
+<body>
+  <div id="user-info">
+    <span id="user-email"></span>
+    <button type="button" onclick="logout()">Logga ut</button>
+  </div>  <h1>HR Admin Panel</h1>  <form id="userForm" style="margin-top:2rem">
+    <h3 id="formTitle">Add User</h3>
+    <input type="hidden" id="editId" />
+    <label>First Name:</label>
+    <input type="text" id="first" required />
+    <label>Last Name:</label>
+    <input type="text" id="last" required />
+    <label>Employee #:</label>
+    <input type="text" id="empNum" />
+    <label>Email:</label>
+    <input type="email" id="email" required />
+    <label>Department:</label>
+    <select id="department"></select>
+    <label>Manager:</label>
+    <select id="manager"></select>
+    <label>Title:</label>
+    <select id="title"></select>
+    <label>Start Date:</label>
+    <input type="date" id="start" />
+    <label>End Date:</label>
+    <input type="date" id="end" />
+    <div class="form-buttons">
+      <button type="submit">Save</button>
+      <button type="button" onclick="cancelEdit()">Cancel</button>
+    </div>
+  </form>  <table id="userTable">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Employee #</th>
+        <th>Email</th>
+        <th>Department</th>
+        <th>Manager</th>
+        <th>Title</th>
+        <th>Start</th>
+        <th>End</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
-  async function checkSession() {
-    const { data } = await supabaseClient.auth.getSession();
-    const session = data.session;
-    if (!session) return window.location.href = '/login.html';
-    document.getElementById('user-email').textContent = `Inloggad som: ${session.user.email}`;
+    const supabaseClient = createClient(
+      'https://pwxslkkxevuknredmfpb.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB3eHNsa2t4ZXZ1a25yZWRtZnBiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMDA1MDcsImV4cCI6MjA2MDU3NjUwN30.vWwGu6q8mJy5vX1g584qSL73V9F3bhh2RSW-2dNeEc0'
+    );
+
+    const departments = ["HR", "IT", "Finance", "Sales", "Marketing"];
+    const titles = ["Manager", "Developer", "Analyst", "Coordinator", "Engineer"];
+
+    const session = (await supabaseClient.auth.getSession()).data.session;
+    if (!session) window.location.href = '/login.html';
     localStorage.setItem('sb_token', session.access_token);
+    document.getElementById('user-email').textContent = `Inloggad som: ${session.user.email}`;
+
+    departments.forEach(dep => {
+      const option = document.createElement('option');
+      option.value = dep;
+      option.textContent = dep;
+      document.getElementById('department').appendChild(option);
+    });
+
+    titles.forEach(t => {
+      const option = document.createElement('option');
+      option.value = t;
+      option.textContent = t;
+      document.getElementById('title').appendChild(option);
+    });
+
+    async function loadUsers() {
+      const token = localStorage.getItem('sb_token');
+      const res = await fetch('/api/users', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await res.json();
+      const tbody = document.querySelector('#userTable tbody');
+      tbody.innerHTML = '';
+      if (data.Resources) {
+        data.Resources.forEach(u => {
+          const row = `<tr>
+            <td>${u.name?.givenName || ''} ${u.name?.familyName || ''}</td>
+            <td>${u.employeeNumber || ''}</td>
+            <td>${u.emails?.[0]?.value || ''}</td>
+            <td>${u.department || ''}</td>
+            <td>${u.manager || ''}</td>
+            <td>${u.title || ''}</td>
+            <td>${u.startDate || ''}</td>
+            <td>${u.endDate || ''}</td>
+            <td>
+              <button onclick="editUser('${u.id}')">Edit</button>
+              <button onclick="deleteUser('${u.id}')">Delete</button>
+            </td>
+          </tr>`;
+          tbody.insertAdjacentHTML('beforeend', row);
+        });
+      }
+    }
+
+    async function loadManagers() {
+      const token = localStorage.getItem('sb_token');
+      const res = await fetch('/api/users', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await res.json();
+      const select = document.getElementById('manager');
+      select.innerHTML = '<option value="">Select Manager</option>';
+      if (data.Resources) {
+        data.Resources.forEach(u => {
+          const fullName = `${u.name?.givenName || ''} ${u.name?.familyName || ''}`.trim();
+          const option = document.createElement('option');
+          option.value = u.employeeNumber;
+          option.textContent = fullName;
+          select.appendChild(option);
+        });
+      }
+    }
+
+    window.logout = async function () {
+      await supabaseClient.auth.signOut();
+      localStorage.removeItem('sb_token');
+      window.location.href = '/login.html';
+    };
+
+    window.cancelEdit = function () {
+      document.getElementById('userForm').reset();
+      document.getElementById('editId').value = '';
+      document.getElementById('formTitle').textContent = 'Add User';
+      document.getElementById('userForm').classList.remove('editing');
+    };
+
+    window.editUser = async function(id) {
+      const token = localStorage.getItem('sb_token');
+      const res = await fetch(`/api/users?id=${id}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const user = await res.json();
+      if (!user || !user.name) return alert('Kunde inte hämta användardata');
+
+      document.getElementById('editId').value = user.id;
+      document.getElementById('first').value = user.name.givenName || '';
+      document.getElementById('last').value = user.name.familyName || '';
+      document.getElementById('email').value = user.emails?.[0]?.value || '';
+      document.getElementById('department').value = user.department || '';
+      document.getElementById('manager').value = user.manager || '';
+      document.getElementById('title').value = user.title || '';
+      document.getElementById('empNum').value = user.employeeNumber || '';
+      document.getElementById('start').value = user.startDate || '';
+      document.getElementById('end').value = user.endDate || '';
+      document.getElementById('formTitle').textContent = 'Edit User';
+      document.getElementById('userForm').classList.add('editing');
+    };
+
+    window.deleteUser = async function(id) {
+      const token = localStorage.getItem('sb_token');
+      if (!confirm('Are you sure you want to delete this user?')) return;
+      const res = await fetch(`/api/users?id=${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        alert('User deleted');
+        loadUsers();
+      } else {
+        const error = await res.json();
+        alert('Delete failed: ' + (error.error || res.statusText));
+      }
+    };
+
     loadUsers();
     loadManagers();
-  }
 
-  async function loadUsers() {
-    const token = localStorage.getItem('sb_token');
-    const res = await fetch('/api/users', {
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
-    const data = await res.json();
-    const tbody = document.querySelector('#userTable tbody');
-    tbody.innerHTML = '';
-    if (data.Resources) {
-      data.Resources.forEach(u => {
-        const row = `<tr>
-          <td>${u.name?.givenName || ''} ${u.name?.familyName || ''}</td>
-          <td>${u.employeeNumber || ''}</td>
-          <td>${u.emails?.[0]?.value || ''}</td>
-          <td>${u.department || ''}</td>
-          <td>${u.manager || ''}</td>
-          <td>${u.title || ''}</td>
-          <td>${u.startDate || ''}</td>
-          <td>${u.endDate || ''}</td>
-          <td>
-            <button onclick="editUser('${u.id}')">Edit</button>
-            <button onclick="deleteUser('${u.id}')">Delete</button>
-          </td>
-        </tr>`;
-        tbody.insertAdjacentHTML('beforeend', row);
+    document.getElementById('userForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const token = localStorage.getItem('sb_token');
+      const id = document.getElementById('editId').value;
+      const user = {
+        name: {
+          givenName: document.getElementById('first').value,
+          familyName: document.getElementById('last').value
+        },
+        emails: [{ value: document.getElementById('email').value }],
+        department: document.getElementById('department').value,
+        manager: document.getElementById('manager').value,
+        title: document.getElementById('title').value,
+        employeeNumber: document.getElementById('empNum').value,
+        startDate: document.getElementById('start').value || null,
+        endDate: document.getElementById('end').value || null,
+        phoneNumbers: []
+      };
+
+      if (!id) {
+        user.userName = (Date.now() + '-' + Math.random().toString(36).substr(2, 5));
+      }
+
+      const url = id ? `/api/users?id=${id}` : '/api/users';
+      const method = id ? 'PATCH' : 'POST';
+
+      const res = await fetch(url, {
+        method,
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(user)
       });
-    }
-  }
 
-  async function loadManagers() {
-    const token = localStorage.getItem('sb_token');
-    const res = await fetch('/api/users', {
-      headers: { 'Authorization': `Bearer ${token}` }
+      if (res.ok) {
+        alert(id ? 'User updated' : 'User added');
+        cancelEdit();
+        loadUsers();
+      } else {
+        const error = await res.json();
+        alert('Error: ' + error.error);
+      }
     });
-    const data = await res.json();
-    const select = document.getElementById('manager');
-    select.innerHTML = '<option value="">Select Manager</option>';
-    if (data.Resources) {
-      data.Resources.forEach(u => {
-        const fullName = `${u.name?.givenName || ''} ${u.name?.familyName || ''}`.trim();
-        const option = document.createElement('option');
-        option.value = u.employeeNumber;
-        option.textContent = fullName;
-        select.appendChild(option);
-      });
-    }
-  }
-
-  window.editUser = async function(id) {
-    const token = localStorage.getItem('sb_token');
-    const res = await fetch(`/api/users?id=${id}`, {
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
-    const user = await res.json();
-    if (!user || !user.name) return alert('Kunde inte hämta användardata');
-
-    document.getElementById('editId').value = user.id;
-    document.getElementById('first').value = user.name.givenName || '';
-    document.getElementById('last').value = user.name.familyName || '';
-    document.getElementById('email').value = user.emails?.[0]?.value || '';
-    document.getElementById('department').value = user.department || '';
-    document.getElementById('manager').value = user.manager || '';
-    document.getElementById('title').value = user.title || '';
-    document.getElementById('empNum').value = user.employeeNumber || '';
-    document.getElementById('start').value = user.startDate || '';
-    document.getElementById('end').value = user.endDate || '';
-    document.getElementById('formTitle').textContent = 'Edit User';
-    document.getElementById('userForm').classList.add('editing');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  checkSession();
-</script>
+  </script></body>
+</html>
