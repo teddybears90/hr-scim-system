@@ -1,4 +1,4 @@
-<!-- Admin.html med omordning av fält --><!DOCTYPE html><html lang="en">
+<!-- Admin.html med markerat redigeringsläge --><!DOCTYPE html><html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -9,8 +9,11 @@
     table { border-collapse: collapse; width: 100%; margin-top: 2rem; }
     th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
     th { background-color: #f4f4f4; }
-    input, select, button { padding: 0.5rem; margin: 0.2rem; }
+    input, select, button, label { padding: 0.5rem; margin: 0.2rem; display: block; }
     #user-info { margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; }
+    form label { font-weight: bold; margin-top: 0.5rem; }
+    .form-buttons { display: flex; gap: 1rem; }
+    .editing { background-color: #fff8cc; border: 2px solid #ffcd00; padding: 1rem; border-radius: 5px; }
   </style>
 </head>
 <body>
@@ -20,10 +23,15 @@
   </div>  <h1>HR Admin Panel</h1>  <form id="userForm" style="margin-top:2rem">
     <h3 id="formTitle">Add User</h3>
     <input type="hidden" id="editId" />
-    <input type="text" placeholder="First Name" id="first" required />
-    <input type="text" placeholder="Last Name" id="last" required />
-    <input type="text" placeholder="Employee #" id="empNum" />
-    <input type="email" placeholder="Email" id="email" required />
+    <label>First Name:</label>
+    <input type="text" id="first" required />
+    <label>Last Name:</label>
+    <input type="text" id="last" required />
+    <label>Employee #:</label>
+    <input type="text" id="empNum" />
+    <label>Email:</label>
+    <input type="email" id="email" required />
+    <label>Department:</label>
     <select id="department">
       <option value="">Select Department</option>
       <option value="HR">HR</option>
@@ -32,9 +40,11 @@
       <option value="Sales">Sales</option>
       <option value="Marketing">Marketing</option>
     </select>
+    <label>Manager:</label>
     <select id="manager">
       <option value="">Select Manager</option>
     </select>
+    <label>Title:</label>
     <select id="title">
       <option value="">Select Title</option>
       <option value="Manager">Manager</option>
@@ -43,9 +53,14 @@
       <option value="Coordinator">Coordinator</option>
       <option value="Engineer">Engineer</option>
     </select>
-    <input type="date" placeholder="Start Date" id="start" />
-    <input type="date" placeholder="End Date" id="end" />
-    <button type="submit">Save</button>
+    <label>Start Date:</label>
+    <input type="date" id="start" />
+    <label>End Date:</label>
+    <input type="date" id="end" />
+    <div class="form-buttons">
+      <button type="submit">Save</button>
+      <button type="button" onclick="cancelEdit()">Cancel</button>
+    </div>
   </form>  <table id="userTable">
     <thead>
       <tr>
@@ -90,6 +105,36 @@
       await supabaseClient.auth.signOut();
       localStorage.removeItem('sb_token');
       window.location.href = '/login.html';
+    };
+
+    window.cancelEdit = function () {
+      document.getElementById('userForm').reset();
+      document.getElementById('editId').value = '';
+      document.getElementById('formTitle').textContent = 'Add User';
+      document.getElementById('userForm').classList.remove('editing');
+    };
+
+    window.editUser = async function (id) {
+      const token = localStorage.getItem('sb_token');
+      const res = await fetch(`/api/users?id=${id}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const user = await res.json();
+      if (!user || !user.name) return alert('Kunde inte hämta användardata');
+
+      document.getElementById('editId').value = user.id;
+      document.getElementById('first').value = user.name.givenName || '';
+      document.getElementById('last').value = user.name.familyName || '';
+      document.getElementById('email').value = user.emails?.[0]?.value || '';
+      document.getElementById('department').value = user.department || '';
+      document.getElementById('manager').value = user.manager || '';
+      document.getElementById('title').value = user.title || '';
+      document.getElementById('empNum').value = user.employeeNumber || '';
+      document.getElementById('start').value = user.startDate || '';
+      document.getElementById('end').value = user.endDate || '';
+      document.getElementById('formTitle').textContent = 'Edit User';
+      document.getElementById('userForm').classList.add('editing');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
     async function loadManagers() {
@@ -177,8 +222,7 @@
 
       if (res.ok) {
         alert(id ? 'User updated' : 'User added');
-        document.getElementById('userForm').reset();
-        document.getElementById('formTitle').textContent = 'Add User';
+        cancelEdit();
         loadUsers();
       } else {
         const error = await res.json();
