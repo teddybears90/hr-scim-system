@@ -32,6 +32,8 @@
 
     async function loadUsers() {
       const { data, error } = await supabase.from('users').select('*');
+      console.log("Supabase response:", { data, error });
+
       if (error) {
         alert('Kunde inte hämta användare: ' + error.message);
         return;
@@ -39,6 +41,7 @@
 
       const tbody = document.querySelector("#userTable tbody");
       data.forEach(user => {
+        console.log("User:", user);
         const row = document.createElement("tr");
         row.innerHTML = `
           <td>${user.first_name || ''} ${user.last_name || ''}</td>
