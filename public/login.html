@@ -28,9 +28,10 @@
       msg.textContent = 'Loggar in...';
 
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-      console.log("Login result:", data, error);
+      console.log("Full Supabase login response:", { data, error });
 
       if (error) {
+        alert(JSON.stringify(error || {}, null, 2));
         msg.textContent = `Fel: ${error.message || 'Okänt fel'}`;
         console.error("Inloggningsfel:", error);
       } else {
