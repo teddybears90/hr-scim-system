@@ -1,5 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html><html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -17,9 +16,7 @@
   <div id="user-info">
     Inloggad som: <span id="user-email">...</span>
     <button onclick="logout()">Logga ut</button>
-  </div>
-
-  <table id="userTable">
+  </div>  <table id="userTable">
     <thead>
       <tr>
         <th>Name</th>
@@ -34,27 +31,29 @@
       </tr>
     </thead>
     <tbody></tbody>
-  </table>
-
-  <script>
+  </table>  <script>
     const SUPABASE_URL = "https://pwxslkkxevuknredmfpb.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB3eHNsa2t4ZXZ1a25yZWRtZnBiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMDA1MDcsImV4cCI6MjA2MDU3NjUwN30.vWwGu6q8mJy5vX1g584qSL73V9F3bhh2RSW-2dNeEc0";
     const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     async function loadUsers() {
-      const session = await supabase.auth.getSession();
-      const token = session?.data?.session?.access_token;
-      const user = session?.data?.session?.user;
+      const sessionData = await supabase.auth.getSession();
+      const session = sessionData?.data?.session;
 
-      if (!token || !user) {
+      if (!session || !session.user || !session.access_token) {
         window.location.href = "/login.html";
         return;
       }
 
+      const user = session.user;
+      const token = session.access_token;
+
       document.getElementById("user-email").textContent = user.email;
 
       const res = await fetch('/api/users', {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
       });
 
       const result = await res.json();
@@ -104,6 +103,5 @@
     }
 
     loadUsers();
-  </script>
-</body>
+  </script></body>
 </html>
