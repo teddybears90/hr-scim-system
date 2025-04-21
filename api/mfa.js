@@ -8,8 +8,6 @@ const { method } = req;
 
 try { const { data: { user }, error: userError } = await supabase.auth.getUser(token); if (userError || !user) return res.status(401).json({ error: 'Invalid token' });
 
-const userId = user.id;
-
 if (method === 'POST' && !req.body.verify) {
   const secret = speakeasy.generateSecret({
     name: `My HR App (${user.email})`,
@@ -23,7 +21,8 @@ if (method === 'POST' && !req.body.verify) {
 
   if (error) throw error;
 
-  const qrLink = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(secret.otpauth_url)}`;
+  const otpauthUrl = secret.otpauth_url;
+  const qrLink = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(otpauthUrl)}`;
 
   return res.status(200).json({ qr: qrLink, secret: secret.base32 });
 }
@@ -57,5 +56,5 @@ if (method === 'POST' && req.body.verify) {
 
 return res.status(405).json({ error: 'Method not allowed' });
 
-} catch (err) { console.error(err); return res.status(500).json({ error: err.message }); } };
+} catch (err) { console.error('MFA API error:', err); return res.status(500).json({ error: err.message }); } };
 
