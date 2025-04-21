@@ -1,7 +1,7 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html><html lang="sv">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Användaröversikt</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.5/dist/umd/supabase.min.js"></script>
   <style>
@@ -32,16 +32,16 @@
 
     async function loadUsers() {
       const { data, error } = await supabase.from('users').select('*');
-      console.log("Supabase response:", { data, error });
-
       if (error) {
         alert('Kunde inte hämta användare: ' + error.message);
+        console.error("Supabase SELECT error:", error);
         return;
       }
 
       const tbody = document.querySelector("#userTable tbody");
+      tbody.innerHTML = '';
+
       data.forEach(user => {
-        console.log("User:", user);
         const row = document.createElement("tr");
         row.innerHTML = `
           <td>${user.first_name || ''} ${user.last_name || ''}</td>
