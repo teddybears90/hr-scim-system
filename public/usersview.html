@@ -61,6 +61,11 @@
     </select>
 
     <input type="text" id="employee_number" placeholder="Employee ID" />
+
+    <select id="manager">
+      <option value="">Select Manager</option>
+    </select>
+
     <button type="submit">Add</button>
   </form>
 
@@ -90,16 +95,27 @@
       const tbody = document.querySelector("#userTable tbody");
       tbody.innerHTML = '';
 
+      const managerSelect = document.getElementById("manager");
+      managerSelect.innerHTML = '<option value="">Select Manager</option>';
+
       data.forEach(user => {
+        const fullName = `${user.first_name || ''} ${user.last_name || ''}`.trim();
         const row = document.createElement("tr");
         row.innerHTML = `
-          <td>${user.first_name || ''} ${user.last_name || ''}</td>
+          <td>${fullName}</td>
           <td>${user.email || ''}</td>
           <td>${user.department || ''}</td>
           <td>${user.title || ''}</td>
           <td>${user.employee_number || ''}</td>
         `;
         tbody.appendChild(row);
+
+        if (user.employee_number && fullName) {
+          const option = document.createElement("option");
+          option.value = user.employee_number;
+          option.textContent = fullName;
+          managerSelect.appendChild(option);
+        }
       });
     }
 
@@ -118,9 +134,11 @@
       const department = document.getElementById("department").value;
       const title = document.getElementById("title").value;
       const employee_number = document.getElementById("employee_number").value;
+      const manager_id = document.getElementById("manager").value;
+      const manager_name = document.getElementById("manager").selectedOptions[0]?.textContent || null;
 
       const { error } = await client.from("users").insert([
-        { first_name, last_name, email, department, title, employee_number }
+        { first_name, last_name, email, department, title, employee_number, manager_id, manager_name }
       ]);
 
       if (error) {
