@@ -1,4 +1,4 @@
-// File: /api/scim/v2/users.js
+// File: /api/scim/v2/Users.js
 
 import { createClient } from '@supabase/supabase-js';
 
