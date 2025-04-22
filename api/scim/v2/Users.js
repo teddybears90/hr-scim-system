@@ -8,15 +8,38 @@ const supabase = createClient(
 );
 
 export default async function handler(req, res) {
-  const { method, query, body } = req;
-  const userId = query.id || (body && body.id);
-
+  const { method, url, query, body } = req;
   const token = req.headers.authorization?.replace('Bearer ', '');
   if (token !== process.env.SCIM_TOKEN) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
+  const matchId = url.match(/\/Users\/(.+)$/);
+  const userId = matchId ? matchId[1] : query.id || (body && body.id);
+
   try {
+    if (method === 'GET' && matchId) {
+      const { data, error } = await supabase.from('users').select('*').eq('id', userId).single();
+      if (error || !data) return res.status(404).json({ error: 'User not found' });
+
+      return res.status(200).json({
+        schemas: ["urn:ietf:params:scim:schemas:core:2.0:User"],
+        id: data.id,
+        userName: data.email,
+        active: true,
+        name: {
+          givenName: data.first_name,
+          familyName: data.last_name
+        },
+        emails: [{ value: data.email, primary: true }],
+        externalId: data.employee_number,
+        meta: {
+          resourceType: "User",
+          location: `${req.headers.host}/api/scim/v2/Users/${data.id}`
+        }
+      });
+    }
+
     if (method === 'GET') {
       const { data, error } = await supabase.from('users').select('*');
       if (error) throw error;
@@ -25,6 +48,7 @@ export default async function handler(req, res) {
         schemas: ["urn:ietf:params:scim:schemas:core:2.0:User"],
         id: user.id,
         userName: user.email,
+        active: true,
         name: {
           givenName: user.first_name,
           familyName: user.last_name
@@ -33,7 +57,7 @@ export default async function handler(req, res) {
         externalId: user.employee_number,
         meta: {
           resourceType: "User",
-          location: `${req.headers.host}/api/scim/v2/users/${user.id}`
+          location: `${req.headers.host}/api/scim/v2/Users/${user.id}`
         }
       }));
 
