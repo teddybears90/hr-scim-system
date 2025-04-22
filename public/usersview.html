@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="sv">
+<!DOCTYPE html>
+<html lang="sv">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -24,17 +25,26 @@
       </tr>
     </thead>
     <tbody></tbody>
-  </table>  <script>
-    const supabase = supabase.createClient(
+  </table>
+
+  <script>
+    const { createClient } = supabase;
+    const client = createClient(
       'https://pwxslkkxevuknredmfpb.supabase.co',
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB3eHNsa2t4ZXZ1a25yZWRtZnBiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMDA1MDcsImV4cCI6MjA2MDU3NjUwN30.vWwGu6q8mJy5vX1g584qSL73V9F3bhh2RSW-2dNeEc0'
     );
 
     async function loadUsers() {
-      const { data, error } = await supabase.from('users').select('*');
+      const { data, error } = await client.from('users').select('*');
+      console.log("Supabase response:", { data, error });
+
       if (error) {
-        alert('Kunde inte hämta användare: ' + error.message);
-        console.error("Supabase SELECT error:", error);
+        alert('Fel vid hämtning: ' + error.message);
+        return;
+      }
+
+      if (!Array.isArray(data)) {
+        alert('Ingen data hittades (eller felaktigt format)');
         return;
       }
 
@@ -55,5 +65,6 @@
     }
 
     loadUsers();
-  </script></body>
+  </script>
+</body>
 </html>
