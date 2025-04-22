@@ -58,7 +58,8 @@ export default async function handler(req, res) {
             { name: "userName", type: "string", multiValued: false, required: true },
             { name: "name", type: "complex", multiValued: false, required: true },
             { name: "emails", type: "complex", multiValued: true, required: false },
-            { name: "externalId", type: "string", multiValued: false, required: false }
+            { name: "externalId", type: "string", multiValued: false, required: false },
+            { name: "active", type: "boolean", multiValued: false, required: false }
           ],
           meta: {
             resourceType: "Schema",
