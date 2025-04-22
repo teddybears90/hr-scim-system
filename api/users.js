@@ -1,99 +1,69 @@
-const { createClient } = require('@supabase/supabase-js');
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Användaröversikt</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.5/dist/umd/supabase.min.js"></script>
+  <style>
+    body { font-family: sans-serif; padding: 2rem; }
+    table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+    th, td { padding: 8px; border: 1px solid #ccc; text-align: left; }
+    th { background-color: #f0f0f0; }
+  </style>
+</head>
+<body>
+  <h1>Användare i databasen</h1>
+  <table id="userTable">
+    <thead>
+      <tr>
+        <th>Namn</th>
+        <th>Email</th>
+        <th>Avdelning</th>
+        <th>Titel</th>
+        <th>Employee ID</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
 
-const supabase = createClient( process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY );
+  <script>
+    const supabase = supabase.createClient(
+      'https://pwxslkkxevuknredmfpb.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB3eHNsa2t4ZXZ1a25yZWRtZnBiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMDA1MDcsImV4cCI6MjA2MDU3NjUwN30.vWwGu6q8mJy5vX1g584qSL73V9F3bhh2RSW-2dNeEc0'
+    );
 
-module.exports = async function handler(req, res) { const token = req.headers.authorization?.replace('Bearer ', ''); if (!token) return res.status(401).json({ error: 'Authorization token missing' });
+    async function loadUsers() {
+      const { data, error } = await supabase.from('users').select('*');
+      console.log("Supabase response:", { data, error });
 
-const { method, query, body } = req;
+      if (error) {
+        alert('Fel vid hämtning: ' + error.message);
+        return;
+      }
 
-try { const { data: session, error: sessionError } = await supabase.auth.getUser(token); if (sessionError || !session.user) return res.status(401).json({ error: 'Invalid token' });
+      if (!Array.isArray(data)) {
+        alert('Ingen data hittades (eller felaktigt format)');
+        return;
+      }
 
-if (method === 'GET') {
-  if (query.id) {
-    const { data, error } = await supabase.from('users').select('*').eq('id', query.id).single();
-    if (error) throw error;
-    return res.status(200).json({ Resources: [data] });
-  }
-  const { data, error } = await supabase.from('users').select('*');
-  if (error) throw error;
-  return res.status(200).json({ Resources: data });
-}
+      const tbody = document.querySelector("#userTable tbody");
+      tbody.innerHTML = '';
 
-if (method === 'POST') {
-  const {
-    name,
-    emails,
-    department,
-    title,
-    employeeNumber,
-    startDate,
-    endDate,
-    phoneNumbers,
-    manager_id,
-    manager_name,
-    userName
-  } = body;
+      data.forEach(user => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${user.first_name || ''} ${user.last_name || ''}</td>
+          <td>${user.email || ''}</td>
+          <td>${user.department || ''}</td>
+          <td>${user.title || ''}</td>
+          <td>${user.employee_number || ''}</td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
 
-  const insert = {
-    name,
-    emails,
-    department,
-    title,
-    employeeNumber,
-    startDate,
-    endDate,
-    phoneNumbers,
-    manager_id,
-    manager_name,
-    userName
-  };
-
-  const { data, error } = await supabase.from('users').insert(insert).select().single();
-  if (error) throw error;
-  return res.status(201).json(data);
-}
-
-if (method === 'PATCH') {
-  const { id } = query;
-  const {
-    name,
-    emails,
-    department,
-    title,
-    employeeNumber,
-    startDate,
-    endDate,
-    phoneNumbers,
-    manager_id,
-    manager_name
-  } = body;
-
-  const update = {
-    name,
-    emails,
-    department,
-    title,
-    employeeNumber,
-    startDate,
-    endDate,
-    phoneNumbers,
-    manager_id,
-    manager_name
-  };
-
-  const { data, error } = await supabase.from('users').update(update).eq('id', id).select().single();
-  if (error) throw error;
-  return res.status(200).json(data);
-}
-
-if (method === 'DELETE') {
-  const { id } = query;
-  const { error } = await supabase.from('users').delete().eq('id', id);
-  if (error) throw error;
-  return res.status(204).end();
-}
-
-return res.status(405).json({ error: 'Method not allowed' });
-
-} catch (err) { console.error(err); return res.status(500).json({ error: err.message }); } };
-
+    loadUsers();
+  </script>
+</body>
+</html>
