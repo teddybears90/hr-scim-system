@@ -10,6 +10,8 @@
     table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
     th, td { padding: 8px; border: 1px solid #ccc; text-align: left; }
     th { background-color: #f0f0f0; }
+    form { margin-top: 2rem; display: grid; gap: 1rem; max-width: 400px; }
+    input, select, button { padding: 8px; font-size: 1rem; }
   </style>
 </head>
 <body>
@@ -26,6 +28,17 @@
     </thead>
     <tbody></tbody>
   </table>
+
+  <h2>Lägg till ny användare</h2>
+  <form id="userForm">
+    <input type="text" id="first_name" placeholder="Förnamn" required />
+    <input type="text" id="last_name" placeholder="Efternamn" required />
+    <input type="email" id="email" placeholder="E-post" required />
+    <input type="text" id="department" placeholder="Avdelning" />
+    <input type="text" id="title" placeholder="Titel" />
+    <input type="text" id="employee_number" placeholder="Employee ID" />
+    <button type="submit">Lägg till</button>
+  </form>
 
   <script>
     const { createClient } = supabase;
@@ -63,6 +76,28 @@
         tbody.appendChild(row);
       });
     }
+
+    document.getElementById("userForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const first_name = document.getElementById("first_name").value;
+      const last_name = document.getElementById("last_name").value;
+      const email = document.getElementById("email").value;
+      const department = document.getElementById("department").value;
+      const title = document.getElementById("title").value;
+      const employee_number = document.getElementById("employee_number").value;
+
+      const { error } = await client.from("users").insert([
+        { first_name, last_name, email, department, title, employee_number }
+      ]);
+
+      if (error) {
+        alert("Fel vid skapande: " + error.message);
+      } else {
+        alert("Användare tillagd!");
+        document.getElementById("userForm").reset();
+        loadUsers();
+      }
+    });
 
     loadUsers();
   </script>
