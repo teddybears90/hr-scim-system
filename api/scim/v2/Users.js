@@ -26,7 +26,7 @@ export default async function handler(req, res) {
         schemas: ["urn:ietf:params:scim:schemas:core:2.0:User"],
         id: data.id,
         userName: data.email,
-        active: true,
+        active: data.active ?? true,
         name: {
           givenName: data.first_name,
           familyName: data.last_name
@@ -48,7 +48,7 @@ export default async function handler(req, res) {
         schemas: ["urn:ietf:params:scim:schemas:core:2.0:User"],
         id: user.id,
         userName: user.email,
-        active: true,
+        active: user.active ?? true,
         name: {
           givenName: user.first_name,
           familyName: user.last_name
@@ -82,6 +82,7 @@ export default async function handler(req, res) {
           last_name: familyName,
           email,
           employee_number,
+          active: true
         }
       ]);
 
@@ -101,6 +102,7 @@ export default async function handler(req, res) {
         if (path === 'name.familyname') updates.last_name = value;
         if (path === 'username' || path === 'emails') updates.email = value;
         if (path === 'externalid') updates.employee_number = value;
+        if (path === 'active') updates.active = value;
       });
 
       const { error } = await supabase.from('users').update(updates).eq('id', userId);
