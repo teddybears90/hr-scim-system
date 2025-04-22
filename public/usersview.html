@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="sv">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Användaröversikt</title>
+  <title>User Overview</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.5/dist/umd/supabase.min.js"></script>
   <style>
     body { font-family: sans-serif; padding: 2rem; }
@@ -15,30 +15,53 @@
   </style>
 </head>
 <body>
-  <h1>Användare i databasen</h1>
+  <h1>Users in the database</h1>
   <table id="userTable">
     <thead>
       <tr>
-        <th>Namn</th>
+        <th>Name</th>
         <th>Email</th>
-        <th>Avdelning</th>
-        <th>Titel</th>
+        <th>Department</th>
+        <th>Title</th>
         <th>Employee ID</th>
       </tr>
     </thead>
     <tbody></tbody>
   </table>
 
-  <h2>Lägg till ny användare</h2>
+  <h2>Add New User</h2>
   <form id="userForm">
-    <input type="password" id="access_key" placeholder="Behörighetsnyckel" required />
-    <input type="text" id="first_name" placeholder="Förnamn" required />
-    <input type="text" id="last_name" placeholder="Efternamn" required />
-    <input type="email" id="email" placeholder="E-post" required />
-    <input type="text" id="department" placeholder="Avdelning" />
-    <input type="text" id="title" placeholder="Titel" />
+    <input type="password" id="access_key" placeholder="Access key" required />
+    <input type="text" id="first_name" placeholder="First name" required />
+    <input type="text" id="last_name" placeholder="Last name" required />
+    <input type="email" id="email" placeholder="Email" required />
+
+    <select id="department">
+      <option value="">Select Department</option>
+      <option value="IT">IT</option>
+      <option value="Finance">Finance</option>
+      <option value="HR">HR</option>
+      <option value="Marketing">Marketing</option>
+      <option value="Engineering">Engineering</option>
+      <option value="Security">Security</option>
+      <option value="Sales">Sales</option>
+      <option value="R&D">R&D</option>
+    </select>
+
+    <select id="title">
+      <option value="">Select Title</option>
+      <option value="Manager">Manager</option>
+      <option value="Engineer">Engineer</option>
+      <option value="Support Technician">Support Technician</option>
+      <option value="Marketing Specialist">Marketing Specialist</option>
+      <option value="Financial Analyst">Financial Analyst</option>
+      <option value="HR Coordinator">HR Coordinator</option>
+      <option value="Account Manager">Account Manager</option>
+      <option value="Director of Strategy">Director of Strategy</option>
+    </select>
+
     <input type="text" id="employee_number" placeholder="Employee ID" />
-    <button type="submit">Lägg till</button>
+    <button type="submit">Add</button>
   </form>
 
   <script>
@@ -48,19 +71,19 @@
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB3eHNsa2t4ZXZ1a25yZWRtZnBiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMDA1MDcsImV4cCI6MjA2MDU3NjUwN30.vWwGu6q8mJy5vX1g584qSL73V9F3bhh2RSW-2dNeEc0'
     );
 
-    const ACCESS_KEY = "hemligkod123"; // byt till något eget
+    const ACCESS_KEY = "hemligkod123";
 
     async function loadUsers() {
       const { data, error } = await client.from('users').select('*');
       console.log("Supabase response:", { data, error });
 
       if (error) {
-        alert('Fel vid hämtning: ' + error.message);
+        alert('Failed to fetch: ' + error.message);
         return;
       }
 
       if (!Array.isArray(data)) {
-        alert('Ingen data hittades (eller felaktigt format)');
+        alert('No data returned or unexpected format');
         return;
       }
 
@@ -85,7 +108,7 @@
 
       const access = document.getElementById("access_key").value;
       if (access !== ACCESS_KEY) {
-        alert("Felaktig behörighetsnyckel");
+        alert("Invalid access key");
         return;
       }
 
@@ -101,9 +124,9 @@
       ]);
 
       if (error) {
-        alert("Fel vid skapande: " + error.message);
+        alert("Insert failed: " + error.message);
       } else {
-        alert("Användare tillagd!");
+        alert("User added!");
         document.getElementById("userForm").reset();
         loadUsers();
       }
