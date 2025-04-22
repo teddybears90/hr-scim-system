@@ -31,6 +31,7 @@
 
   <h2>Lägg till ny användare</h2>
   <form id="userForm">
+    <input type="password" id="access_key" placeholder="Behörighetsnyckel" required />
     <input type="text" id="first_name" placeholder="Förnamn" required />
     <input type="text" id="last_name" placeholder="Efternamn" required />
     <input type="email" id="email" placeholder="E-post" required />
@@ -46,6 +47,8 @@
       'https://pwxslkkxevuknredmfpb.supabase.co',
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB3eHNsa2t4ZXZ1a25yZWRtZnBiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMDA1MDcsImV4cCI6MjA2MDU3NjUwN30.vWwGu6q8mJy5vX1g584qSL73V9F3bhh2RSW-2dNeEc0'
     );
+
+    const ACCESS_KEY = "hemligkod123"; // byt till något eget
 
     async function loadUsers() {
       const { data, error } = await client.from('users').select('*');
@@ -79,6 +82,13 @@
 
     document.getElementById("userForm").addEventListener("submit", async (e) => {
       e.preventDefault();
+
+      const access = document.getElementById("access_key").value;
+      if (access !== ACCESS_KEY) {
+        alert("Felaktig behörighetsnyckel");
+        return;
+      }
+
       const first_name = document.getElementById("first_name").value;
       const last_name = document.getElementById("last_name").value;
       const email = document.getElementById("email").value;
