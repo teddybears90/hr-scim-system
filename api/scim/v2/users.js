@@ -11,6 +11,11 @@ export default async function handler(req, res) {
   const { method, query, body } = req;
   const userId = query.id || (body && body.id);
 
+  const token = req.headers.authorization?.replace('Bearer ', '');
+  if (token !== process.env.SCIM_TOKEN) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+
   try {
     if (method === 'GET') {
       const { data, error } = await supabase.from('users').select('*');
