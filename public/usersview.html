@@ -25,6 +25,8 @@
         <th>Department</th>
         <th>Title</th>
         <th>Employee ID</th>
+        <th>Start Date</th>
+        <th>End Date</th>
         <th>Manager</th>
         <th>Actions</th>
       </tr>
@@ -39,6 +41,9 @@
     <input type="text" id="last_name" placeholder="Last name" required />
     <input type="text" id="employee_number" placeholder="Employee ID" />
     <input type="email" id="email" placeholder="Email" required />
+
+    <input type="date" id="start_date" placeholder="Start date" />
+    <input type="date" id="end_date" placeholder="End date" />
 
     <select id="manager">
       <option value="">Select Manager</option>
@@ -103,6 +108,8 @@
           <td>${user.department || ''}</td>
           <td>${user.title || ''}</td>
           <td>${user.employee_number || ''}</td>
+          <td>${user.start_date || ''}</td>
+          <td>${user.end_date || ''}</td>
           <td>${user.manager_name || ''}</td>
           <td>
             <button onclick="deleteUser('${user.id}')">Delete</button>
@@ -141,6 +148,8 @@
       document.getElementById("title").value = data.title || '';
       document.getElementById("employee_number").value = data.employee_number || '';
       document.getElementById("manager").value = data.manager_id || '';
+      document.getElementById("start_date").value = data.start_date || '';
+      document.getElementById("end_date").value = data.end_date || '';
     }
 
     document.getElementById("cancelBtn").addEventListener("click", () => {
@@ -167,7 +176,9 @@
         title: document.getElementById("title").value,
         employee_number: document.getElementById("employee_number").value,
         manager_id: document.getElementById("manager").value,
-        manager_name: document.getElementById("manager").selectedOptions[0]?.textContent || null
+        manager_name: document.getElementById("manager").selectedOptions[0]?.textContent || null,
+        start_date: document.getElementById("start_date").value || null,
+        end_date: document.getElementById("end_date").value || null
       };
 
       let result;
