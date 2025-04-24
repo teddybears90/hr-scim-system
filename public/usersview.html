@@ -1,105 +1,193 @@
 <!DOCTYPE html>
-<html lang="sv">
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Användaröversikt</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User Overview</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.5/dist/umd/supabase.min.js"></script>
   <style>
     body { font-family: sans-serif; padding: 2rem; }
     table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
     th, td { padding: 8px; border: 1px solid #ccc; text-align: left; }
     th { background-color: #f0f0f0; }
-    input, button { margin: 5px 0; padding: 6px; }
+    form { margin-top: 2rem; display: grid; gap: 1rem; max-width: 400px; }
+    input, select, button { padding: 8px; font-size: 1rem; }
+    #buttonRow { display: flex; gap: 10px; }
   </style>
 </head>
 <body>
-  <h1>Användare i databasen</h1>
+  <h1>Users in the database</h1>
   <table id="userTable">
     <thead>
       <tr>
-        <th>Namn</th>
+        <th>Name</th>
         <th>Email</th>
-        <th>Avdelning</th>
-        <th>Titel</th>
+        <th>Department</th>
+        <th>Title</th>
         <th>Employee ID</th>
-        <th>Start Date</th>
-        <th>End Date</th>
+        <th>Manager</th>
+        <th>Actions</th>
       </tr>
     </thead>
     <tbody></tbody>
   </table>
 
-  <h2>Lägg till användare</h2>
-  <input type="text" id="first_name" placeholder="Förnamn"><br>
-  <input type="text" id="last_name" placeholder="Efternamn"><br>
-  <input type="email" id="email" placeholder="Email"><br>
-  <input type="text" id="department" placeholder="Avdelning"><br>
-  <input type="text" id="title" placeholder="Titel"><br>
-  <input type="text" id="employee_number" placeholder="Employee ID"><br>
-  <input type="date" id="start_date" placeholder="Startdatum"><br>
-  <input type="date" id="end_date" placeholder="Slutdatum"><br>
-  <button onclick="addUser()">Lägg till användare</button>
+  <h2 id="formTitle">Add New User</h2>
+  <form id="userForm">
+    <input type="password" id="access_key" placeholder="Access key" required />
+    <input type="text" id="first_name" placeholder="First name" required />
+    <input type="text" id="last_name" placeholder="Last name" required />
+    <input type="text" id="employee_number" placeholder="Employee ID" />
+    <input type="email" id="email" placeholder="Email" required />
+
+    <select id="manager">
+      <option value="">Select Manager</option>
+    </select>
+
+    <select id="department">
+      <option value="">Select Department</option>
+      <option value="IT">IT</option>
+      <option value="Finance">Finance</option>
+      <option value="HR">HR</option>
+      <option value="Marketing">Marketing</option>
+      <option value="Engineering">Engineering</option>
+      <option value="Security">Security</option>
+      <option value="Sales">Sales</option>
+      <option value="R&D">R&D</option>
+    </select>
+
+    <select id="title">
+      <option value="">Select Title</option>
+      <option value="Manager">Manager</option>
+      <option value="Engineer">Engineer</option>
+      <option value="Support Technician">Support Technician</option>
+      <option value="Marketing Specialist">Marketing Specialist</option>
+      <option value="Financial Analyst">Financial Analyst</option>
+      <option value="HR Coordinator">HR Coordinator</option>
+      <option value="Account Manager">Account Manager</option>
+      <option value="Director of Strategy">Director of Strategy</option>
+    </select>
+
+    <div id="buttonRow">
+      <button type="submit">Save</button>
+      <button type="button" id="cancelBtn" style="display: none;">Cancel</button>
+    </div>
+  </form>
 
   <script>
-    const supabase = supabase.createClient(
+    const { createClient } = supabase;
+    const client = createClient(
       'https://pwxslkkxevuknredmfpb.supabase.co',
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB3eHNsa2t4ZXZ1a25yZWRtZnBiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMDA1MDcsImV4cCI6MjA2MDU3NjUwN30.vWwGu6q8mJy5vX1g584qSL73V9F3bhh2RSW-2dNeEc0'
     );
 
+    const ACCESS_KEY = "hemligkod123";
+    let editingUserId = null;
+
     async function loadUsers() {
-      const { data, error } = await supabase.from('users').select('*');
-      if (error) {
-        alert('Fel vid hämtning: ' + error.message);
-        return;
-      }
+      const { data, error } = await client.from('users').select('*');
+      if (error) return alert('Failed to fetch: ' + error.message);
 
       const tbody = document.querySelector("#userTable tbody");
       tbody.innerHTML = '';
 
+      const managerSelect = document.getElementById("manager");
+      managerSelect.innerHTML = '<option value="">Select Manager</option>';
+
       data.forEach(user => {
+        const fullName = `${user.first_name || ''} ${user.last_name || ''}`.trim();
         const row = document.createElement("tr");
         row.innerHTML = `
-          <td>${user.first_name || ''} ${user.last_name || ''}</td>
+          <td>${fullName}</td>
           <td>${user.email || ''}</td>
           <td>${user.department || ''}</td>
           <td>${user.title || ''}</td>
           <td>${user.employee_number || ''}</td>
-          <td>${user.start_date || ''}</td>
-          <td>${user.end_date || ''}</td>
+          <td>${user.manager_name || ''}</td>
+          <td>
+            <button onclick="deleteUser('${user.id}')">Delete</button>
+            <button onclick="editUser('${user.id}')">Update</button>
+          </td>
         `;
         tbody.appendChild(row);
+
+        if (user.employee_number && fullName) {
+          const option = document.createElement("option");
+          option.value = user.employee_number;
+          option.textContent = fullName;
+          managerSelect.appendChild(option);
+        }
       });
     }
 
-    async function addUser() {
-      const { value: first_name } = document.getElementById('first_name');
-      const { value: last_name } = document.getElementById('last_name');
-      const { value: email } = document.getElementById('email');
-      const { value: department } = document.getElementById('department');
-      const { value: title } = document.getElementById('title');
-      const { value: employee_number } = document.getElementById('employee_number');
-      const { value: start_date } = document.getElementById('start_date');
-      const { value: end_date } = document.getElementById('end_date');
+    async function deleteUser(id) {
+      if (!confirm("Are you sure you want to delete this user?")) return;
+      const { error } = await client.from("users").delete().eq("id", id);
+      if (error) alert("Delete failed: " + error.message);
+      else loadUsers();
+    }
 
-      const { error } = await supabase.from('users').insert([{
-        first_name,
-        last_name,
-        email,
-        department,
-        title,
-        employee_number,
-        start_date,
-        end_date
-      }]);
+    async function editUser(id) {
+      const { data, error } = await client.from("users").select('*').eq("id", id).single();
+      if (error) return alert("Failed to fetch user: " + error.message);
 
-      if (error) {
-        alert("Fel vid skapande: " + error.message);
+      editingUserId = id;
+      document.getElementById("formTitle").textContent = "Update User";
+      document.getElementById("cancelBtn").style.display = "inline-block";
+      document.getElementById("first_name").value = data.first_name || '';
+      document.getElementById("last_name").value = data.last_name || '';
+      document.getElementById("email").value = data.email || '';
+      document.getElementById("department").value = data.department || '';
+      document.getElementById("title").value = data.title || '';
+      document.getElementById("employee_number").value = data.employee_number || '';
+      document.getElementById("manager").value = data.manager_id || '';
+    }
+
+    document.getElementById("cancelBtn").addEventListener("click", () => {
+      editingUserId = null;
+      document.getElementById("formTitle").textContent = "Add New User";
+      document.getElementById("userForm").reset();
+      document.getElementById("cancelBtn").style.display = "none";
+    });
+
+    document.getElementById("userForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const access = document.getElementById("access_key").value;
+      if (access !== ACCESS_KEY) {
+        alert("Invalid access key");
+        return;
+      }
+
+      const user = {
+        first_name: document.getElementById("first_name").value,
+        last_name: document.getElementById("last_name").value,
+        email: document.getElementById("email").value,
+        department: document.getElementById("department").value,
+        title: document.getElementById("title").value,
+        employee_number: document.getElementById("employee_number").value,
+        manager_id: document.getElementById("manager").value,
+        manager_name: document.getElementById("manager").selectedOptions[0]?.textContent || null
+      };
+
+      let result;
+      if (editingUserId) {
+        result = await client.from("users").update(user).eq("id", editingUserId);
+        editingUserId = null;
+        document.getElementById("formTitle").textContent = "Add New User";
+        document.getElementById("cancelBtn").style.display = "none";
       } else {
-        alert("Användare tillagd!");
+        result = await client.from("users").insert([user]);
+      }
+
+      if (result.error) {
+        alert("Save failed: " + result.error.message);
+      } else {
+        alert("User saved!");
+        document.getElementById("userForm").reset();
         loadUsers();
       }
-    }
+    });
 
     loadUsers();
   </script>
